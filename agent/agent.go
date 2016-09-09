@@ -3,12 +3,16 @@ package agent
 import (
 	"github.com/MustWin/cmeter/configuration"
 	"github.com/MustWin/cmeter/context"
+	"github.com/MustWin/cmeter/pipeline"
+	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
 )
 
 type Agent struct {
 	context.Context
 
 	config *configuration.Config
+
+	pipeline pipeline.Pipeline
 }
 
 func (agent *Agent) Run() error {
@@ -18,8 +22,13 @@ func (agent *Agent) Run() error {
 }
 
 func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
+	filters := []pipeline.Filter{
+		logFilter.New(),
+	}
+
 	return &Agent{
-		Context: ctx,
-		config:  config,
+		Context:  ctx,
+		config:   config,
+		pipeline: pipeline.New(filters...),
 	}, nil
 }
