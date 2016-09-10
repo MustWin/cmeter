@@ -1,11 +1,11 @@
-package logger
+package container
 
 import (
 	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
 )
 
-const NAME = "logger"
+const NAME = "container"
 
 type Filter struct{}
 
@@ -14,7 +14,7 @@ func (filter *Filter) Name() string {
 }
 
 func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
-	context.GetLogger(ctx).Infof("processing %q message", m.Type())
+	context.GetLogger(ctx).Infoln("processing message")
 	return nil
 }
 

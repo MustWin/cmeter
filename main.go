@@ -11,6 +11,8 @@ import (
 	_ "github.com/MustWin/cmeter/cmd/api"
 	"github.com/MustWin/cmeter/cmd/root"
 	"github.com/MustWin/cmeter/context"
+	_ "github.com/MustWin/cmeter/monitor/cadvisor"
+	_ "github.com/MustWin/cmeter/monitor/embedded"
 )
 
 const VERSION = "0.0.1-alpha"
