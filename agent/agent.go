@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/MustWin/cmeter/configuration"
+	"github.com/MustWin/cmeter/containers"
+	containersFactory "github.com/MustWin/cmeter/containers/factory"
 	"github.com/MustWin/cmeter/context"
-	"github.com/MustWin/cmeter/monitor"
-	monitorFactory "github.com/MustWin/cmeter/monitor/factory"
 	"github.com/MustWin/cmeter/pipeline"
 	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
 	"github.com/MustWin/cmeter/pipeline/messages/registercontainer"
@@ -19,7 +19,7 @@ type Agent struct {
 
 	pipeline pipeline.Pipeline
 
-	monitor monitor.Monitor
+	containers containers.ContainersDriver
 }
 
 func (agent *Agent) Run() error {

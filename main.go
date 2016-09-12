@@ -10,9 +10,9 @@ import (
 	_ "github.com/MustWin/cmeter/cmd/agent"
 	_ "github.com/MustWin/cmeter/cmd/api"
 	"github.com/MustWin/cmeter/cmd/root"
+	_ "github.com/MustWin/cmeter/containers/cadvisor"
+	_ "github.com/MustWin/cmeter/containers/embedded"
 	"github.com/MustWin/cmeter/context"
-	_ "github.com/MustWin/cmeter/monitor/cadvisor"
-	_ "github.com/MustWin/cmeter/monitor/embedded"
 )
 
 const VERSION = "0.0.1-alpha"
