@@ -29,5 +29,5 @@ type ContainerInfo struct {
 
 type Driver interface {
 	WatchEvents(types ...EventType) (EventsChannel, error)
-	GetContainers() ([]string, error)
+	GetContainers() ([]*ContainerInfo, error)
 }

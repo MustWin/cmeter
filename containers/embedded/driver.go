@@ -12,9 +12,7 @@ import (
 	"github.com/google/cadvisor/utils/sysfs"
 
 	"github.com/MustWin/cmeter/containers"
-	"github.com/MustWin/cmeter/containers/cadvisor"
 	"github.com/MustWin/cmeter/containers/factory"
-	"github.com/MustWin/cmeter/context"
 )
 
 const statsCacheDuration = 2 * time.Minute
@@ -30,13 +28,6 @@ type driverFactory struct {
 }
 
 func (factory *driverFactory) Create(parameters map[string]interface{}) (containers.Driver, error) {
-}
-
-type driver struct {
-	manager manager.Manager
-}
-
-func New() containers.Driver {
 	sysFs, err := sysfs.NewRealSysFs()
 	if err != nil {
 		return nil, err
@@ -56,29 +47,36 @@ func New() containers.Driver {
 		return nil, err
 	}
 
-	return nil, nil
+	return d, nil
 }
 
-func (d *driver) WatchEvents(types ...EventType) (EventsChannel, error) {
+type driver struct {
+	manager manager.Manager
+}
+
+func (d *driver) WatchEvents(types ...containers.EventType) (containers.EventsChannel, error) {
 	r := events.NewRequest()
 	for _, t := range types {
 		r.EventType[v1.EventType(string(t))] = true
 	}
 
-	return d.manager.WatchForEvents(r)
+	cec, err := d.manager.WatchForEvents(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return newEventChannel(cec), nil
 }
 
 func (d *driver) GetContainers() ([]*containers.ContainerInfo, error) {
 	q := &v1.ContainerInfoRequest{}
-	containers, err := d.manager.AllDockerContainers(q)
+	rawContainers, err := d.manager.AllDockerContainers(q)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make([]*containers.ContainerInfo, 0)
-	for name, info := range containers {
-		info := &v1.ContainerInfo{}
-		info.
+	for _, info := range rawContainers {
 		localInfo := &containers.ContainerInfo{
 			Name:   info.Name,
 			Labels: info.Labels,
@@ -87,5 +85,5 @@ func (d *driver) GetContainers() ([]*containers.ContainerInfo, error) {
 		result = append(result, localInfo)
 	}
 
-	return result
+	return result, nil
 }
