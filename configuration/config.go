@@ -30,69 +30,69 @@ func (version *Version) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type Parameters map[string]interface{}
 
-type Monitor map[string]Parameters
+type Containers map[string]Parameters
 
-func (monitor Monitor) Type() string {
-	var monitorType []string
+func (containers Containers) Type() string {
+	var containersType []string
 
-	for k := range monitor {
-		monitorType = append(monitorType, k)
+	for k := range containers {
+		containersType = append(containersType, k)
 	}
 
-	if len(monitorType) > 1 {
-		panic("multiple monitor drivers specified in the configuration or environment: " + strings.Join(monitorType, ", "))
+	if len(containersType) > 1 {
+		panic("multiple containers drivers specified in the configuration or environment: " + strings.Join(containersType, ", "))
 	}
 
-	if len(monitorType) == 1 {
-		return monitorType[0]
+	if len(containersType) == 1 {
+		return containersType[0]
 	}
 
 	return ""
 }
 
-func (monitor Monitor) Parameters() Parameters {
-	return monitor[monitor.Type()]
+func (containers Containers) Parameters() Parameters {
+	return containers[containers.Type()]
 }
 
-func (monitor Monitor) setParameter(key string, value interface{}) {
-	monitor[monitor.Type()][key] = value
+func (containers Containers) setParameter(key string, value interface{}) {
+	containers[containers.Type()][key] = value
 }
 
-func (monitor *Monitor) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var monitorMap map[string]Parameters
-	err := unmarshal(&monitorMap)
-	if err == nil && len(monitorMap) > 1 {
-		types := make([]string, 0, len(monitorMap))
-		for k := range monitorMap {
+func (containers *Containers) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var containersMap map[string]Parameters
+	err := unmarshal(&containersMap)
+	if err == nil && len(containersMap) > 1 {
+		types := make([]string, 0, len(containersMap))
+		for k := range containersMap {
 			types = append(types, k)
 		}
 
 		if len(types) > 1 {
-			return fmt.Errorf("Must provide exactly one monitor type. provided: %v", types)
+			return fmt.Errorf("Must provide exactly one containers type. provided: %v", types)
 		}
 
-		*monitor = monitorMap
+		*containers = containersMap
 		return nil
 	}
 
-	var monitorType string
-	if err = unmarshal(&monitorType); err != nil {
+	var containersType string
+	if err = unmarshal(&containersType); err != nil {
 		return err
 	}
 
-	*monitor = Monitor{
-		monitorType: Parameters{},
+	*containers = Containers{
+		containersType: Parameters{},
 	}
 
 	return nil
 }
 
-func (monitor Monitor) MarshalYAML() (interface{}, error) {
-	if monitor.Parameters() == nil {
-		return monitor.Type(), nil
+func (containers Containers) MarshalYAML() (interface{}, error) {
+	if containers.Parameters() == nil {
+		return containers.Type(), nil
 	}
 
-	return map[string]Parameters(monitor), nil
+	return map[string]Parameters(containers), nil
 }
 
 type MockApiConfig struct {
@@ -132,10 +132,10 @@ type CollectorConfig struct {
 }
 
 type Config struct {
-	Log       LogConfig       `yaml:"log"`
-	Monitor   Monitor         `yaml:"monitor"`
-	MockApi   MockApiConfig   `yaml:"mockapi"`
-	Collector CollectorConfig `yaml:"collector"`
+	Log        LogConfig       `yaml:"log"`
+	Containers Containers      `yaml:"containers"`
+	MockApi    MockApiConfig   `yaml:"mockapi"`
+	Collector  CollectorConfig `yaml:"collector"`
 }
 
 type ApiConfig struct {
@@ -152,7 +152,7 @@ func newConfig() *Config {
 			Fields:    make(map[string]interface{}),
 		},
 
-		Monitor: make(Monitor),
+		Containers: make(Containers),
 
 		MockApi: MockApiConfig{
 			Addr: ":9090",
@@ -180,8 +180,8 @@ func Parse(rd io.Reader) (*Config, error) {
 			ParseAs: reflect.TypeOf(v0_1Config{}),
 			ConversionFunc: func(c interface{}) (interface{}, error) {
 				if v0_1, ok := c.(*v0_1Config); ok {
-					if v0_1.Monitor.Type() == "" {
-						return nil, fmt.Errorf("no monitor configuration provided")
+					if v0_1.Containers.Type() == "" {
+						return nil, fmt.Errorf("no containers configuration provided")
 					}
 
 					return (*Config)(v0_1), nil

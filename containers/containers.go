@@ -1,6 +1,8 @@
 package containers
 
-import ()
+import (
+	"time"
+)
 
 type EventType string
 
@@ -12,12 +14,17 @@ const (
 type Event struct {
 	Type          EventType
 	ContainerName string
-	Labels        map[string]string
+	ServiceKey    string
 	Timestamp     time.time
 }
 
 type EventsChannel interface {
-	GetChannels() chan *Event
+	GetChannel() <-chan *Event
+}
+
+type ContainerInfo struct {
+	Name   string
+	Labels map[string]string
 }
 
 type Driver interface {

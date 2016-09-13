@@ -20,6 +20,8 @@ type Agent struct {
 	pipeline pipeline.Pipeline
 
 	containers containers.ContainersDriver
+
+	tracker *containers.Tracker
 }
 
 func (agent *Agent) Run() error {
@@ -35,7 +37,7 @@ func (agent *Agent) Run() error {
 }
 
 func (agent *Agent) InitializeContainers() error {
-	containers, err := agent.monitor.GetContainers()
+	containers, err := agent.containers.GetContainers()
 	if err != nil {
 		return err
 	}
@@ -51,9 +53,9 @@ func (agent *Agent) InitializeContainers() error {
 }
 
 func (agent *Agent) ProcessEvents() error {
-	eventChan := agent.monitor.OpenEventChannel(monitor.EVENTS_CREATION, monitor.EVENTS_DELETION)
-	for event := range <-eventChan {
-
+	eventChan := agent.containers.WatchEvents(containers.EventContainerCreation, containers.EventContainerDeletion)
+	for event := range eventChan.GetChannel() {
+		agent.pipeline.Send(, m)
 	}
 }
 
