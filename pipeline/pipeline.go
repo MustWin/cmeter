@@ -8,11 +8,16 @@ import (
 
 type Context struct {
 	context.Context
-	Stopped bool
+	stopped  bool
+	Pipeline Pipeline
 }
 
 func (ctx *Context) Stop() {
-	ctx.Stopped = true
+	ctx.stopped = true
+}
+
+func (ctx *Context) Stopped() {
+	return ctx.stopped
 }
 
 type Message interface {
@@ -63,7 +68,7 @@ func (pipe *simplePipe) Send(ctx context.Context, m Message) error {
 			}
 		}
 
-		if pctx.Stopped {
+		if pctx.Stopped() {
 			break
 		}
 	}

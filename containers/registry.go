@@ -27,11 +27,11 @@ func (registry *Registry) IsRegistered(containerName string) bool {
 func (registry *Registry) Register(ctx context.Context, info *ContainerInfo) error {
 	log := context.GetLoggerWithField(ctx, "container.name", info.Name)
 	if registry.IsRegistered(info.Name) {
-		log.Warnf("container already registered with name %q, ignoring", info.Name)
+		log.Warnf("container name already registered, ignoring", info.Name)
 		return nil
 	}
 
 	registry.containers[info.Name] = info
-	log.Infof("registered container %q", info.Name)
+	log.Info("container registered")
 	return nil
 }

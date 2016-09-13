@@ -1,4 +1,4 @@
-package registercontainer
+package containerdiscovery
 
 import (
 	"github.com/MustWin/cmeter/containers"
@@ -6,7 +6,7 @@ import (
 	"github.com/MustWin/cmeter/shared/uuid"
 )
 
-const TYPE = "register_container"
+const TYPE = "container_discovery"
 
 type Message struct {
 	id        string

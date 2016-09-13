@@ -1,4 +1,4 @@
-package resolveservice
+package resolvecontainer
 
 import (
 	"github.com/MustWin/cmeter/containers"
@@ -7,11 +7,11 @@ import (
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
 )
 
-const NAME = "resolver"
+const NAME = "container_resolver"
 
 type filter struct {
 	serviceKeyLabel string
-	registry        *containers.Registry
+	containers      containers.Driver
 }
 
 func (filter *filter) Name() string {
@@ -22,16 +22,21 @@ func (filter *filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 	switch m.Type() {
 	case statechange.TYPE:
 		details := m.Body().(*statechange.Details)
-		context.GetLoggerWithField(ctx, "container.name", details.ContainerName).Infof("state => %s", details.State)
-		ctx.Stop()
+		if details.Container == nil {
+			info, err := filter.containers.GetContainer(ctx, details.ContainerName)
+			if err != nil {
+				return err
+			}
+
+			details.Container = info
+		}
 	}
 
 	return nil
 }
 
-func New(registry *containers.Registry, serviceKeyLabel string) pipeline.Filter {
+func New(driver containers.Driver) pipeline.Filter {
 	return &filter{
-		registry:        registry,
-		serviceKeyLabel: serviceKeyLabel,
+		containers: driver,
 	}
 }

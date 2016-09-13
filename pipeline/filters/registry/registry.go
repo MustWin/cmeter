@@ -4,6 +4,8 @@ import (
 	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
+	"github.com/MustWin/cmeter/pipeline/messages/containerdiscovery"
+	"github.com/MustWin/cmeter/pipeline/messages/statechange"
 )
 
 const NAME = "registry"
@@ -19,15 +21,23 @@ func (filter *Filter) Name() string {
 
 func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
 	switch m.Type() {
-	case "register_container":
+	case containerdiscovery.TYPE:
 		container := m.Body().(*containers.ContainerInfo)
 		if !filter.IsTrackable(container) {
 			ctx.Stop()
-			return nil
+		} else if err := filter.registry.Register(ctx, container); err != nil {
+			context.GetLogger(ctx)
 		}
 
-		if err := filter.registry.Register(ctx, container); err != nil {
-			context.GetLogger(ctx)
+	case statechange.TYPE:
+		details := m.Body().(*statechange.Details)
+		if details.State == containers.StateCreated {
+			if err := ctx.Pipeline.Send(); err != nil {
+				return err
+			}
+		}
+		if !filter.registry.IsRegistered(details.ContainerName) {
+			ctx.Stop()
 		}
 	}
 

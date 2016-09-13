@@ -22,6 +22,7 @@ func newEventChannel(cec *events.EventChannel) *eventChannel {
 			e := &containers.Event{
 				ContainerName: src.ContainerName,
 				Timestamp:     src.Timestamp,
+				Type:          containers.EventType(string(src.EventType)),
 			}
 
 			ec.channel <- e

@@ -7,8 +7,17 @@ import (
 type EventType string
 
 const (
-	EventContainerCreation = "creation"
-	EventContainerDeletion = "deletion"
+	EventContainerCreation EventType = "containerCreation"
+	EventContainerDeletion EventType = "containerDeletion"
+	EventContainerOom      EventType = "oom"
+	EventContainerOomKill  EventType = "oomKill"
+)
+
+type State string
+
+const (
+	StateRunning State = "running"
+	StateStopped State = "stopped"
 )
 
 type Event struct {

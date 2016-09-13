@@ -14,7 +14,7 @@ func (filter *Filter) Name() string {
 }
 
 func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
-	context.GetLogger(ctx).Infof("processing %q message", m.Type())
+	context.GetLogger(ctx).Debugf("processing %q message", m.Type())
 	return nil
 }
 

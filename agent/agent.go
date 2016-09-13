@@ -11,7 +11,7 @@ import (
 	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
 	registryFilter "github.com/MustWin/cmeter/pipeline/filters/registry"
 	resolveServiceFilter "github.com/MustWin/cmeter/pipeline/filters/resolveservice"
-	"github.com/MustWin/cmeter/pipeline/messages/registercontainer"
+	"github.com/MustWin/cmeter/pipeline/messages/containerdiscovery"
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
 )
 
@@ -28,9 +28,8 @@ type Agent struct {
 }
 
 func (agent *Agent) Run() error {
-	context.GetLogger(agent).Infoln("agent running")
-	defer context.GetLogger(agent).Infoln("agent shutting down")
-
+	context.GetLogger(agent).Info("starting agent")
+	defer context.GetLogger(agent).Info("shutting down agent")
 	err := agent.InitializeContainers()
 	if err != nil {
 		return fmt.Errorf("error initializing container states: %v", err)
@@ -45,9 +44,9 @@ func (agent *Agent) InitializeContainers() error {
 		return err
 	}
 
-	context.GetLogger(agent).Infoln("registering active containers")
+	context.GetLogger(agent).Infof("found %d active containers", len(containers))
 	for _, containerInfo := range containers {
-		m := registercontainer.NewMessage(containerInfo)
+		m := containerdiscovery.NewMessage(containerInfo)
 		if err := agent.pipeline.Send(agent, m); err != nil {
 			return err
 		}
@@ -59,10 +58,15 @@ func (agent *Agent) InitializeContainers() error {
 func (agent *Agent) ProcessEvents() error {
 	eventChan, err := agent.containers.WatchEvents(containers.EventContainerCreation, containers.EventContainerDeletion)
 	if err != nil {
-		return fmt.Errorf("error processing events: %v", err)
+		return fmt.Errorf("error opening event channel: %v", err)
 	}
 
+	context.GetLogger(agent).Info("event monitor started")
+	defer context.GetLogger(agent).Info("event monitor stopped")
 	for event := range eventChan.GetChannel() {
+		var container *containers.ContainerInfo
+		event.Type ==
+		container, err := agent.containers.GetContainer(event.ContainerName)
 		m := statechange.NewMessage(event)
 		agent.pipeline.Send(agent, m)
 	}
@@ -71,7 +75,10 @@ func (agent *Agent) ProcessEvents() error {
 }
 
 func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
+	context.GetLogger(ctx).Info("initializing agent")
+
 	registry := containers.NewRegistry()
+
 	filters := []pipeline.Filter{
 		logFilter.New(),
 		registryFilter.New(registry, config.Tracking.TrackingLabel),
@@ -88,7 +95,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		return nil, err
 	}
 
-	context.GetLogger(ctx).Debugf("using %q containers driver", config.Containers.Type())
+	context.GetLogger(ctx).Infof("using %q containers driver", config.Containers.Type())
 
 	return &Agent{
 		Context:    ctx,
