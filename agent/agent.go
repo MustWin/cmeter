@@ -10,6 +10,7 @@ import (
 	"github.com/MustWin/cmeter/pipeline"
 	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
 	"github.com/MustWin/cmeter/pipeline/messages/registercontainer"
+	"github.com/MustWin/cmeter/pipeline/messages/statechange"
 )
 
 type Agent struct {
@@ -19,7 +20,7 @@ type Agent struct {
 
 	pipeline pipeline.Pipeline
 
-	containers containers.ContainersDriver
+	containers containers.Driver
 
 	tracker *containers.Tracker
 }
@@ -42,8 +43,8 @@ func (agent *Agent) InitializeContainers() error {
 		return err
 	}
 
-	for _, containerId := range containers {
-		m := registercontainer.NewMessage(containerId)
+	for _, containerInfo := range containers {
+		m := registercontainer.NewMessage(containerInfo)
 		if err := agent.pipeline.Send(agent, m); err != nil {
 			return err
 		}
@@ -53,10 +54,17 @@ func (agent *Agent) InitializeContainers() error {
 }
 
 func (agent *Agent) ProcessEvents() error {
-	eventChan := agent.containers.WatchEvents(containers.EventContainerCreation, containers.EventContainerDeletion)
-	for event := range eventChan.GetChannel() {
-		agent.pipeline.Send(, m)
+	eventChan, err := agent.containers.WatchEvents(containers.EventContainerCreation, containers.EventContainerDeletion)
+	if err != nil {
+		return fmt.Errorf("error processing events: %v", err)
 	}
+
+	for event := range eventChan.GetChannel() {
+		m := statechange.NewMessage(event)
+		agent.pipeline.Send(agent, m)
+	}
+
+	return nil
 }
 
 func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
@@ -64,21 +72,21 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		logFilter.New(),
 	}
 
-	monitorParams := config.Monitor.Parameters()
-	if monitorParams == nil {
-		monitorParams = make(configuration.Parameters)
+	containersParams := config.Containers.Parameters()
+	if containersParams == nil {
+		containersParams = make(configuration.Parameters)
 	}
 
-	monitor, err := monitorFactory.Create(config.Monitor.Type(), monitorParams)
+	containersDriver, err := containersFactory.Create(config.Containers.Type(), containersParams)
 	if err != nil {
 		return nil, err
 	}
 
-	context.GetLogger(ctx).Debugf("using %q monitor driver", config.Monitor.Type())
+	context.GetLogger(ctx).Debugf("using %q containers driver", config.Containers.Type())
 	return &Agent{
-		Context:  ctx,
-		config:   config,
-		monitor:  monitor,
-		pipeline: pipeline.New(filters...),
+		Context:    ctx,
+		config:     config,
+		containers: containersDriver,
+		pipeline:   pipeline.New(filters...),
 	}, nil
 }

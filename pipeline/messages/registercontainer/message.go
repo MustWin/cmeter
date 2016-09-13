@@ -1,7 +1,7 @@
 package registercontainer
 
 import (
-	"github.com/MustWin/cmeter/context"
+	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/pipeline"
 	"github.com/MustWin/cmeter/shared/uuid"
 )
@@ -9,8 +9,8 @@ import (
 const TYPE = "register_container"
 
 type Message struct {
-	id          string
-	ContainerID string
+	id        string
+	Container *containers.ContainerInfo
 }
 
 func (msg *Message) ID() string {
@@ -22,12 +22,12 @@ func (msg *Message) Type() string {
 }
 
 func (msg *Message) Body() interface{} {
-	return msg.ContainerID
+	return msg.Container
 }
 
-func NewMessage(containerId string) pipeline.Message {
+func NewMessage(container *containers.ContainerInfo) pipeline.Message {
 	return &Message{
-		id:          uuid.Generate(),
-		ContainerID: containerId,
+		id:        uuid.Generate(),
+		Container: container,
 	}
 }

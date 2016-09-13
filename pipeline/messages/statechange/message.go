@@ -1,18 +1,24 @@
 package statechange
 
 import (
-	"github.com/MustWin/cmeter/context"
-	"github.com/MustWin/cmeter/monitor"
+	"time"
+
+	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/pipeline"
 	"github.com/MustWin/cmeter/shared/uuid"
 )
 
 const TYPE = "state_change"
 
+type Details struct {
+	ContainerName string
+	State         string
+	Timestamp     time.Time
+}
+
 type Message struct {
-	id          string
-	ContainerID string
-	State       string
+	id      string
+	Details *Details
 }
 
 func (msg *Message) ID() string {
@@ -24,12 +30,24 @@ func (msg *Message) Type() string {
 }
 
 func (msg *Message) Body() interface{} {
-	return msg.ContainerID
+	return msg.Details
 }
 
-func NewMessage(containerId string) pipeline.Message {
+func NewMessage(event *containers.Event) pipeline.Message {
+	details := &Details{
+		ContainerName: event.ContainerName,
+		Timestamp:     event.Timestamp,
+	}
+
+	switch event.Type {
+	case containers.EventContainerCreation:
+		details.State = "created"
+	case containers.EventContainerDeletion:
+		details.State = "deleted"
+	}
+
 	return &Message{
-		id:          uuid.Generate(),
-		ContainerID: containerId,
+		id:      uuid.Generate(),
+		Details: details,
 	}
 }
