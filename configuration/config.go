@@ -131,6 +131,11 @@ type CollectorConfig struct {
 	TrackingLabel string `yaml:"tracking_label,omitempty"`
 }
 
+type TrackerConfig struct {
+	ServiceKeyLabel string `yaml:"service_key_label,omitempty"`
+	TrackingLabel   string `yaml:"tracking_label,omitempty"`
+}
+
 type Config struct {
 	Log        LogConfig       `yaml:"log"`
 	Containers Containers      `yaml:"containers"`

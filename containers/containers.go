@@ -15,7 +15,7 @@ type Event struct {
 	Type          EventType
 	ContainerName string
 	ServiceKey    string
-	Timestamp     time.time
+	Timestamp     time.Time
 }
 
 type EventsChannel interface {
