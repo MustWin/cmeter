@@ -20,8 +20,8 @@ func main() {
 	rand.Seed(time.Now().Unix())
 	ctx := context.WithVersion(context.Background(), VERSION)
 
-	execute := cmd.BuildRootExecutor(ctx, root.Info)
-	if err := execute(); err != nil {
+	dispatch := cmd.CreateDispatcher(ctx, root.Info)
+	if err := dispatch(); err != nil {
 		log.Fatalln(err)
 	}
 }

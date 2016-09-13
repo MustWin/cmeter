@@ -21,7 +21,7 @@ func Register(name string, info *Info) {
 	registry[name] = info
 }
 
-func BuildRootExecutor(ctx context.Context, info *Info) func() error {
+func CreateDispatcher(ctx context.Context, info *Info) func() error {
 	root := makeCobraCommand(ctx, info)
 	for _, info := range registry {
 		cmd := makeCobraCommand(ctx, info)
