@@ -1,4 +1,4 @@
-package embedded
+package containers
 
 import (
 	"github.com/MustWin/cmeter/configuration"
