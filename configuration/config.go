@@ -141,6 +141,7 @@ type Config struct {
 	Containers Containers      `yaml:"containers"`
 	MockApi    MockApiConfig   `yaml:"mockapi"`
 	Collector  CollectorConfig `yaml:"collector"`
+	Tracking   TrackerConfig   `yaml:"tracking"`
 }
 
 type ApiConfig struct {

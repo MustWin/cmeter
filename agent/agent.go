@@ -9,6 +9,8 @@ import (
 	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
 	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
+	registryFilter "github.com/MustWin/cmeter/pipeline/filters/registry"
+	resolveServiceFilter "github.com/MustWin/cmeter/pipeline/filters/resolveservice"
 	"github.com/MustWin/cmeter/pipeline/messages/registercontainer"
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
 )
@@ -22,7 +24,7 @@ type Agent struct {
 
 	containers containers.Driver
 
-	tracker *containers.Tracker
+	registry *containers.Registry
 }
 
 func (agent *Agent) Run() error {
@@ -31,7 +33,7 @@ func (agent *Agent) Run() error {
 
 	err := agent.InitializeContainers()
 	if err != nil {
-		return fmt.Errorf("error initializing container state: %v", err)
+		return fmt.Errorf("error initializing container states: %v", err)
 	}
 
 	return agent.ProcessEvents()
@@ -43,6 +45,7 @@ func (agent *Agent) InitializeContainers() error {
 		return err
 	}
 
+	context.GetLogger(agent).Infoln("registering active containers")
 	for _, containerInfo := range containers {
 		m := registercontainer.NewMessage(containerInfo)
 		if err := agent.pipeline.Send(agent, m); err != nil {
@@ -68,8 +71,11 @@ func (agent *Agent) ProcessEvents() error {
 }
 
 func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
+	registry := containers.NewRegistry()
 	filters := []pipeline.Filter{
 		logFilter.New(),
+		registryFilter.New(registry, config.Tracking.TrackingLabel),
+		resolveServiceFilter.New(registry, config.Tracking.ServiceKeyLabel),
 	}
 
 	containersParams := config.Containers.Parameters()
@@ -83,10 +89,12 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 	}
 
 	context.GetLogger(ctx).Debugf("using %q containers driver", config.Containers.Type())
+
 	return &Agent{
 		Context:    ctx,
 		config:     config,
 		containers: containersDriver,
 		pipeline:   pipeline.New(filters...),
+		registry:   containers.NewRegistry(),
 	}, nil
 }

@@ -1,7 +1,9 @@
 package embedded
 
 import (
+	"flag"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/google/cadvisor/cache/memory"
@@ -14,6 +16,8 @@ import (
 	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/containers/factory"
 )
+
+var parseOnce sync.Once
 
 const statsCacheDuration = 2 * time.Minute
 const maxHousekeepingInterval = 15 * time.Second
@@ -28,6 +32,12 @@ type driverFactory struct {
 }
 
 func (factory *driverFactory) Create(parameters map[string]interface{}) (containers.Driver, error) {
+	if !flag.Parsed() {
+		parseOnce.Do(func() {
+			flag.Parse()
+		})
+	}
+
 	sysFs, err := sysfs.NewRealSysFs()
 	if err != nil {
 		return nil, err
@@ -48,6 +58,26 @@ func (factory *driverFactory) Create(parameters map[string]interface{}) (contain
 	}
 
 	return d, nil
+}
+
+func init() {
+	// Override cAdvisor flag defaults
+	flagOverrides := map[string]string{
+		// Override the default cAdvisor housekeeping interval.
+		"housekeeping_interval": defaultHousekeepingInterval.String(),
+		// Disable event storage by default.
+		"event_storage_event_limit": "default=0",
+		"event_storage_age_limit":   "default=0",
+	}
+
+	for name, defaultValue := range flagOverrides {
+		if f := flag.Lookup(name); f != nil {
+			f.DefValue = defaultValue
+			f.Value.Set(defaultValue)
+			// TODO: can't log error here but marking as a *maybe* and might find a more elegant approach for this
+			//log.Errorf("Expected cAdvisor flag %q not found", name)
+		}
+	}
 }
 
 type driver struct {
