@@ -10,8 +10,7 @@ import (
 const NAME = "container_resolver"
 
 type filter struct {
-	serviceKeyLabel string
-	containers      containers.Driver
+	containers containers.Driver
 }
 
 func (filter *filter) Name() string {

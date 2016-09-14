@@ -13,6 +13,7 @@ const TYPE = "state_change"
 
 type Details struct {
 	ContainerName string
+	Container     *containers.ContainerInfo
 	State         containers.State
 	Timestamp     time.Time
 }

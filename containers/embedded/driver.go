@@ -98,6 +98,13 @@ func (d *driver) WatchEvents(types ...containers.EventType) (containers.EventsCh
 	return newEventChannel(cec), nil
 }
 
+func convertContainerInfo(info *v1.ContainerInfo) *containers.ContainerInfo {
+	return &containers.ContainerInfo{
+		Name:   info.Name,
+		Labels: info.Labels,
+	}
+}
+
 func (d *driver) GetContainers() ([]*containers.ContainerInfo, error) {
 	q := &v1.ContainerInfoRequest{}
 	rawContainers, err := d.manager.AllDockerContainers(q)
@@ -107,13 +114,18 @@ func (d *driver) GetContainers() ([]*containers.ContainerInfo, error) {
 
 	result := make([]*containers.ContainerInfo, 0)
 	for _, info := range rawContainers {
-		localInfo := &containers.ContainerInfo{
-			Name:   info.Name,
-			Labels: info.Labels,
-		}
-
-		result = append(result, localInfo)
+		result = append(result, convertContainerInfo(info))
 	}
 
 	return result, nil
+}
+
+func (d *driver) GetContainer(name string) (*containers.ContainerInfo, error) {
+	r := &v1.ContainerInfoRequest{NumStats: 0}
+	info, err := d.manager.GetContainerInfo(name, r)
+	if err != nil {
+		return nil, err
+	}
+
+	return convertContainerInfo(info), nil
 }
