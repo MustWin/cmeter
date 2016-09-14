@@ -10,6 +10,7 @@ import (
 	"github.com/MustWin/cmeter/pipeline"
 	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
 	registryFilter "github.com/MustWin/cmeter/pipeline/filters/registry"
+	resolveContainerFilter "github.com/MustWin/cmeter/pipeline/filters/resolvecontainer"
 	resolveServiceFilter "github.com/MustWin/cmeter/pipeline/filters/resolveservice"
 	"github.com/MustWin/cmeter/pipeline/messages/containerdiscovery"
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
@@ -39,7 +40,7 @@ func (agent *Agent) Run() error {
 }
 
 func (agent *Agent) InitializeContainers() error {
-	containers, err := agent.containers.GetContainers()
+	containers, err := agent.containers.GetContainers(agent)
 	if err != nil {
 		return err
 	}
@@ -56,7 +57,7 @@ func (agent *Agent) InitializeContainers() error {
 }
 
 func (agent *Agent) ProcessEvents() error {
-	eventChan, err := agent.containers.WatchEvents(containers.EventContainerCreation, containers.EventContainerDeletion)
+	eventChan, err := agent.containers.WatchEvents(agent, containers.EventContainerCreation, containers.EventContainerDeletion)
 	if err != nil {
 		return fmt.Errorf("error opening event channel: %v", err)
 	}

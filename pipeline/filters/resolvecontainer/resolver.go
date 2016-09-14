@@ -2,7 +2,6 @@ package resolvecontainer
 
 import (
 	"github.com/MustWin/cmeter/containers"
-	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
 )

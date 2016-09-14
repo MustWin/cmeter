@@ -16,7 +16,7 @@ func (ctx *Context) Stop() {
 	ctx.stopped = true
 }
 
-func (ctx *Context) Stopped() {
+func (ctx *Context) Stopped() bool {
 	return ctx.stopped
 }
 
@@ -56,7 +56,7 @@ func (pipe *simplePipe) Send(ctx context.Context, m Message) error {
 
 	pctx := &Context{
 		Context: ctx,
-		Stopped: false,
+		stopped: false,
 	}
 
 	for _, filter := range pipe.filters {

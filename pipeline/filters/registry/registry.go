@@ -31,11 +31,12 @@ func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 
 	case statechange.TYPE:
 		details := m.Body().(*statechange.Details)
-		if details.State == containers.StateCreated {
-			if err := ctx.Pipeline.Send(); err != nil {
+		if details.State == containers.StateRunning {
+			if err := ctx.Pipeline.Send(ctx, containerdiscovery.NewMessage(details.Container)); err != nil {
 				return err
 			}
 		}
+
 		if !filter.registry.IsRegistered(details.ContainerName) {
 			ctx.Stop()
 		}

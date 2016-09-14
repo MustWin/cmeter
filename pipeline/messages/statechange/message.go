@@ -1,7 +1,6 @@
 package statechange
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/MustWin/cmeter/containers"
@@ -43,11 +42,11 @@ func NewMessage(event *containers.Event) pipeline.Message {
 
 	switch event.Type {
 	case containers.EventContainerCreation:
-		details.State = containers.StateCreated
+		details.State = containers.StateRunning
 	case containers.EventContainerDeletion:
 		details.State = containers.StateStopped
 	default:
-		details.State = fmt.Sprintf("unknown(%q)", event.Type)
+		details.State = containers.StateUnknown
 	}
 
 	return &Message{

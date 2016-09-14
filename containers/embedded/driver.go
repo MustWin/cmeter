@@ -15,6 +15,7 @@ import (
 
 	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/containers/factory"
+	"github.com/MustWin/cmeter/context"
 )
 
 var parseOnce sync.Once
@@ -84,7 +85,7 @@ type driver struct {
 	manager manager.Manager
 }
 
-func (d *driver) WatchEvents(types ...containers.EventType) (containers.EventsChannel, error) {
+func (d *driver) WatchEvents(ctx context.Context, types ...containers.EventType) (containers.EventsChannel, error) {
 	r := events.NewRequest()
 	for _, t := range types {
 		r.EventType[v1.EventType(string(t))] = true
@@ -98,14 +99,14 @@ func (d *driver) WatchEvents(types ...containers.EventType) (containers.EventsCh
 	return newEventChannel(cec), nil
 }
 
-func convertContainerInfo(info *v1.ContainerInfo) *containers.ContainerInfo {
+func convertContainerInfo(info v1.ContainerInfo) *containers.ContainerInfo {
 	return &containers.ContainerInfo{
 		Name:   info.Name,
 		Labels: info.Labels,
 	}
 }
 
-func (d *driver) GetContainers() ([]*containers.ContainerInfo, error) {
+func (d *driver) GetContainers(ctx context.Context) ([]*containers.ContainerInfo, error) {
 	q := &v1.ContainerInfoRequest{}
 	rawContainers, err := d.manager.AllDockerContainers(q)
 	if err != nil {
@@ -120,12 +121,12 @@ func (d *driver) GetContainers() ([]*containers.ContainerInfo, error) {
 	return result, nil
 }
 
-func (d *driver) GetContainer(name string) (*containers.ContainerInfo, error) {
+func (d *driver) GetContainer(ctx context.Context, name string) (*containers.ContainerInfo, error) {
 	r := &v1.ContainerInfoRequest{NumStats: 0}
 	info, err := d.manager.GetContainerInfo(name, r)
 	if err != nil {
 		return nil, err
 	}
 
-	return convertContainerInfo(info), nil
+	return convertContainerInfo(*info), nil
 }
