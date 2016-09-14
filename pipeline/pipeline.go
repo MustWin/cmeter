@@ -30,6 +30,11 @@ type Pipeline interface {
 	Send(ctx context.Context, m Message) error
 }
 
+type Emitter interface {
+	Start() error
+	Stop() error
+}
+
 type Filter interface {
 	Name() string
 	HandleMessage(ctx *Context, m Message) error

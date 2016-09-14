@@ -3,11 +3,14 @@ package agent
 import (
 	"fmt"
 
+	"github.com/MustWin/cmeter/collector"
 	"github.com/MustWin/cmeter/configuration"
 	"github.com/MustWin/cmeter/containers"
 	containersFactory "github.com/MustWin/cmeter/containers/factory"
 	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
+	collectionsEmitter "github.com/MustWin/cmeter/pipeline/emitters/collections"
+	eventsEmitter "github.com/MustWin/cmeter/pipeline/emitters/events"
 	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
 	registryFilter "github.com/MustWin/cmeter/pipeline/filters/registry"
 	resolveContainerFilter "github.com/MustWin/cmeter/pipeline/filters/resolvecontainer"
@@ -21,13 +24,15 @@ type Agent struct {
 
 	config *configuration.Config
 
-	collector collector.Driver
+	collector collector.Collector
 
 	pipeline pipeline.Pipeline
 
 	containers containers.Driver
 
 	registry *containers.Registry
+
+	emitters []pipeline.Emitter
 }
 
 func (agent *Agent) Run() error {
@@ -78,6 +83,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 	context.GetLogger(ctx).Info("initializing agent")
 
 	registry := containers.NewRegistry()
+	collector := collector.New(agent)
 
 	containersParams := config.Containers.Parameters()
 	if containersParams == nil {
@@ -98,11 +104,19 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		resolveServiceFilter.New(registry, config.Tracking.ServiceKeyLabel),
 	}
 
+	pipeline := pipeline.New(filters...)
+	emitters := []pipeline.Emitter{
+		collectionsEmitter.New(collector, pipeline),
+		eventsEmitter.New(containers, pipeline),
+	}
+
 	return &Agent{
 		Context:    ctx,
 		config:     config,
 		containers: containersDriver,
-		pipeline:   pipeline.New(filters...),
-		registry:   containers.NewRegistry(),
+		collector:  collector,
+		pipeline:   pipeline,
+		registry:   registry,
+		emitters:   emitters,
 	}, nil
 }
