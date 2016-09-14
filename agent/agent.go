@@ -21,6 +21,8 @@ type Agent struct {
 
 	config *configuration.Config
 
+	collector collector.Driver
+
 	pipeline pipeline.Pipeline
 
 	containers containers.Driver
