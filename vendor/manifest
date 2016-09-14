@@ -62,6 +62,14 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/go-yaml/yaml",
+			"repository": "https://github.com/go-yaml/yaml",
+			"vcs": "git",
+			"revision": "31c299268d302dd0aa9a0dcf765a3d58971ac83f",
+			"branch": "v2",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/golang/protobuf/proto",
 			"repository": "https://github.com/golang/protobuf",
 			"vcs": "git",
