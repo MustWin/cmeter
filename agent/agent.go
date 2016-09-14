@@ -64,9 +64,6 @@ func (agent *Agent) ProcessEvents() error {
 	context.GetLogger(agent).Info("event monitor started")
 	defer context.GetLogger(agent).Info("event monitor stopped")
 	for event := range eventChan.GetChannel() {
-		var container *containers.ContainerInfo
-		event.Type ==
-		container, err := agent.containers.GetContainer(event.ContainerName)
 		m := statechange.NewMessage(event)
 		agent.pipeline.Send(agent, m)
 	}
@@ -79,12 +76,6 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 
 	registry := containers.NewRegistry()
 
-	filters := []pipeline.Filter{
-		logFilter.New(),
-		registryFilter.New(registry, config.Tracking.TrackingLabel),
-		resolveServiceFilter.New(registry, config.Tracking.ServiceKeyLabel),
-	}
-
 	containersParams := config.Containers.Parameters()
 	if containersParams == nil {
 		containersParams = make(configuration.Parameters)
@@ -96,6 +87,13 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 	}
 
 	context.GetLogger(ctx).Infof("using %q containers driver", config.Containers.Type())
+
+	filters := []pipeline.Filter{
+		logFilter.New(),
+		resolveContainerFilter.New(containersDriver),
+		registryFilter.New(registry, config.Tracking.TrackingLabel),
+		resolveServiceFilter.New(registry, config.Tracking.ServiceKeyLabel),
+	}
 
 	return &Agent{
 		Context:    ctx,
