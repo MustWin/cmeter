@@ -26,6 +26,8 @@ type Collector struct {
 }
 
 type Sample struct {
+	Timestamp int64
+	FrameSize time.Duration
 	Container *containers.ContainerInfo
 	Metrics   *containers.Metrics
 }
@@ -65,6 +67,8 @@ func (c *Collector) doCollect(data *collectorData) {
 				sample := &Sample{
 					Container: data.ch.Container(),
 					Metrics:   metrics,
+					Timestamp: time.Now().Unix(),
+					FrameSize: c.Rate,
 				}
 
 				c.samples <- sample
