@@ -31,8 +31,6 @@ type Agent struct {
 	containers containers.Driver
 
 	registry *containers.Registry
-
-	emitters []pipeline.Emitter
 }
 
 func (agent *Agent) Run() error {
@@ -43,6 +41,7 @@ func (agent *Agent) Run() error {
 		return fmt.Errorf("error initializing container states: %v", err)
 	}
 
+	go agent.ProcessCollections()
 	return agent.ProcessEvents()
 }
 
@@ -79,6 +78,11 @@ func (agent *Agent) ProcessEvents() error {
 	return nil
 }
 
+func (agent *Agent) ProcessCollections() {
+	// TODO: this
+	for agent.collector.GetChannel() 
+}
+
 func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 	context.GetLogger(ctx).Info("initializing agent")
 
@@ -105,10 +109,6 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 	}
 
 	pipeline := pipeline.New(filters...)
-	emitters := []pipeline.Emitter{
-		collectionsEmitter.New(collector, pipeline),
-		eventsEmitter.New(containers, pipeline),
-	}
 
 	return &Agent{
 		Context:    ctx,
@@ -117,6 +117,5 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		collector:  collector,
 		pipeline:   pipeline,
 		registry:   registry,
-		emitters:   emitters,
 	}, nil
 }

@@ -12,6 +12,8 @@ import (
 	"github.com/MustWin/cmeter/pipeline/messages/containersample"
 )
 
+const CHANNEL_BUFFER_SIZE = 3000
+
 type collectorData struct {
 	ch     containers.MetricChannel
 	ticker *time.Ticker
@@ -22,6 +24,7 @@ type Collector struct {
 	Pipeline    pipeline.Pipeline
 	Rate        time.Duration
 	collections map[string]*collectorData
+	outbound    chan *containers.Metric
 }
 
 func (c *Collector) Collect(ch containers.MetricsChannel) error {
@@ -39,6 +42,8 @@ func (c *Collector) Collect(ch containers.MetricsChannel) error {
 	go c.doCollect(data)
 	return nil
 }
+
+func (c *Collector) 
 
 func (c *Collector) doCollect(data *collectorData) {
 	for _ = range data.ticker.C {
@@ -83,5 +88,6 @@ func New(ctx context.Context, config *configuration.CollectorConfig, pipeline pi
 		Context:  ctx,
 		Pipeline: pipeline,
 		Rate:     time.Duration(config.Rate * time.Millisecond),
+		outbound: make(chan *containers.Metric),
 	}
 }
