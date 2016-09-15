@@ -32,7 +32,7 @@ type Sample struct {
 	Metrics   *containers.Metrics
 }
 
-func (c *Collector) Collect(ch containers.MetricsChannel) error {
+func (c *Collector) Collect(ctx context.Context, ch containers.MetricsChannel) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -46,8 +46,10 @@ func (c *Collector) Collect(ch containers.MetricsChannel) error {
 	}
 
 	c.collections[ch.Container().Name] = data
-	// log
-	go c.doCollect(data)
+	log := context.GetLoggerWithField(ctx, "container.name", ch.Container().Name)
+	cctx := context.WithLogger(ctx, log)
+	go c.doCollect(cctx, data)
+	log.Info("started container stats collection")
 	return nil
 }
 
@@ -55,14 +57,17 @@ func (c *Collector) GetChannel() <-chan *Sample {
 	return c.samples
 }
 
-func (c *Collector) doCollect(data *collectorData) {
+func (c *Collector) doCollect(ctx context.Context, data *collectorData) {
 	for _ = range data.ticker.C {
 		select {
 		case metrics, ok := <-data.ch.GetChannel():
 			if !ok {
-				if _, err := c.Stop(data.ch.Container()); err != nil {
-					//log
+				defer context.GetLogger(ctx).Info("container stats collection completed")
+				if _, err := c.Stop(ctx, data.ch.Container()); err != nil {
+					context.GetLogger(ctx).Errorf("error stopping container stats collection: %v", err)
 				}
+
+				return
 			} else {
 				sample := &Sample{
 					Container: data.ch.Container(),
@@ -77,7 +82,7 @@ func (c *Collector) doCollect(data *collectorData) {
 	}
 }
 
-func (c *Collector) Stop(container *containers.ContainerInfo) (containers.MetricsChannel, error) {
+func (c *Collector) Stop(ctx context.Context, container *containers.ContainerInfo) (containers.MetricsChannel, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -88,6 +93,7 @@ func (c *Collector) Stop(container *containers.ContainerInfo) (containers.Metric
 
 	data.ticker.Stop()
 	delete(c.collections, container.Name)
+	context.GetLoggerWithField(ctx, "container.name", data.ch.Container().Name).Info("stopped container stats collection")
 	return data.ch, nil
 }
 

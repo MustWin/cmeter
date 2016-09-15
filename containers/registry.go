@@ -47,3 +47,18 @@ func (registry *Registry) Register(ctx context.Context, info *ContainerInfo) err
 	log.Info("container registered")
 	return nil
 }
+
+func (registry *Registry) Drop(ctx context.Context, containerName string) error {
+	registry.mutex.Lock()
+	defer registry.mutex.Unlock()
+
+	log := context.GetLoggerWithField(ctx, "container.name", containerName)
+	if _, ok := registry.containers[containerName]; !ok {
+		log.Warnf("container name not registered, ignoring", containerName)
+		return nil
+	}
+
+	delete(registry.containers, containerName)
+	log.Info("container dropped")
+	return nil
+}

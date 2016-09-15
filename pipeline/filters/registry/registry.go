@@ -26,7 +26,7 @@ func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 		if !filter.IsTrackable(container) {
 			ctx.Stop()
 		} else if err := filter.registry.Register(ctx, container); err != nil {
-			context.GetLogger(ctx)
+			context.GetLogger(ctx).Errorf("error registering container: %v", err)
 		}
 
 	case statechange.TYPE:
@@ -37,6 +37,10 @@ func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 
 		if !filter.registry.IsRegistered(details.ContainerName) {
 			ctx.Stop()
+		} else if details.State == containers.StateStopped {
+			if err := filter.registry.Drop(ctx, details.ContainerName); err != nil {
+				context.GetLogger(ctx).Errorf("error dropping container: %v", err)
+			}
 		}
 	}
 

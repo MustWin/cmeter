@@ -40,12 +40,12 @@ type ContainerInfo struct {
 	Labels map[string]string
 }
 
-type Metrics struct {
+type Stats struct {
 }
 
-type MetricsChannel interface {
+type StatsChannel interface {
 	Container() *ContainerInfo
-	GetChannel() <-chan *Metrics
+	GetChannel() <-chan *Stats
 	Close() error
 }
 
@@ -53,6 +53,6 @@ type Driver interface {
 	WatchEvents(ctx context.Context, types ...EventType) (EventsChannel, error)
 	GetContainers(ctx context.Context) ([]*ContainerInfo, error)
 	GetContainer(ctx context.Context, name string) (*ContainerInfo, error)
-	GetContainerMetrics(ctx context.Context, container *ContainerInfo) (MetricsChannel, error)
+	GetContainerStats(ctx context.Context, container *ContainerInfo) (StatsChannel, error)
 	CloseAllChannels(ctx context.Context) error
 }
