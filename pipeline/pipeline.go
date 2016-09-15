@@ -55,8 +55,9 @@ func (pipe *simplePipe) Send(ctx context.Context, m Message) error {
 	}))
 
 	pctx := &Context{
-		Context: ctx,
-		stopped: false,
+		Pipeline: pipe,
+		Context:  ctx,
+		stopped:  false,
 	}
 
 	for _, filter := range pipe.filters {
