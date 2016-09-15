@@ -13,7 +13,7 @@ import (
 const CHANNEL_BUFFER_SIZE = 3000
 
 type collectorData struct {
-	ch     containers.MetricsChannel
+	ch     containers.StatsChannel
 	ticker *time.Ticker
 }
 
@@ -29,10 +29,10 @@ type Sample struct {
 	Timestamp int64
 	FrameSize time.Duration
 	Container *containers.ContainerInfo
-	Metrics   *containers.Metrics
+	Stats     *containers.Stats
 }
 
-func (c *Collector) Collect(ctx context.Context, ch containers.MetricsChannel) error {
+func (c *Collector) Collect(ctx context.Context, ch containers.StatsChannel) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -71,7 +71,7 @@ func (c *Collector) doCollect(ctx context.Context, data *collectorData) {
 			} else {
 				sample := &Sample{
 					Container: data.ch.Container(),
-					Metrics:   metrics,
+					Stats:     metrics,
 					Timestamp: time.Now().Unix(),
 					FrameSize: c.Rate,
 				}
@@ -82,7 +82,7 @@ func (c *Collector) doCollect(ctx context.Context, data *collectorData) {
 	}
 }
 
-func (c *Collector) Stop(ctx context.Context, container *containers.ContainerInfo) (containers.MetricsChannel, error) {
+func (c *Collector) Stop(ctx context.Context, container *containers.ContainerInfo) (containers.StatsChannel, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -97,11 +97,11 @@ func (c *Collector) Stop(ctx context.Context, container *containers.ContainerInf
 	return data.ch, nil
 }
 
-func (c *Collector) StopAll() ([]containers.MetricsChannel, error) {
+func (c *Collector) StopAll() ([]containers.StatsChannel, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	channels := make([]containers.MetricsChannel, 0)
+	channels := make([]containers.StatsChannel, 0)
 	for _, data := range c.collections {
 		data.ticker.Stop()
 		channels = append(channels, data.ch)

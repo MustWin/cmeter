@@ -1,6 +1,7 @@
 package embedded
 
 import (
+	"errors"
 	"flag"
 	"net/http"
 	"sync"
@@ -131,12 +132,14 @@ func (d *driver) GetContainer(ctx context.Context, name string) (*containers.Con
 	return convertContainerInfo(*info), nil
 }
 
-func (d *driver) GetContainerMetrics(ctx context.Context, container *containers.ContainerInfo) (containers.MetricsChannel, error) {
-	// TODO: do
-	return nil, nil
+func (d *driver) GetContainerStats(ctx context.Context, container *containers.ContainerInfo) (containers.StatsChannel, error) {
+	if !d.manager.Exists(container.Name) {
+		return nil, errors.New("container does not exist")
+	}
+
+	return newStatsChannel(d.manager, container), nil
 }
 
 func (d *driver) CloseAllChannels(ctx context.Context) error {
-	// TODO: do
 	return nil
 }

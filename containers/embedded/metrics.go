@@ -1,19 +1,22 @@
 package embedded
 
 import (
-	"github.com/google/cadvisor/manager"
+	"errors"
 	"sync"
 
+	"github.com/google/cadvisor/manager"
+
 	"github.com/MustWin/cmeter/containers"
-	"github.com/MustWin/cmeter/context"
 )
 
 type statsChannel struct {
-	startFetch sync.Once
-	manager    manager.Manager
-	container  *containers.ContainerInfo
-	ch         chan *containers.Stats
-	closer     chan bool
+	startFetch  sync.Once
+	manager     manager.Manager
+	container   *containers.ContainerInfo
+	ch          chan *containers.Stats
+	closer      chan bool
+	closedMutex sync.Mutex
+	closed      bool
 }
 
 func (ch *statsChannel) Container() *containers.ContainerInfo {
@@ -33,16 +36,25 @@ func (ch *statsChannel) startChannel() {
 		select {
 		case done, ok := <-ch.closer:
 			if !ok && done {
+				ch.closedMutex.Lock()
+				defer ch.closedMutex.Unlock()
 				close(ch.ch)
+				ch.closed = true
 				return
 			} else {
-				ch.manager.// TODO: make call here
+				//ch.manager.
 			}
 		}
 	}
 }
 
 func (ch *statsChannel) Close() error {
+	ch.closedMutex.Lock()
+	defer ch.closedMutex.Unlock()
+	if ch.closed {
+		return errors.New("already closed")
+	}
+
 	ch.closer <- true
 	return nil
 }
@@ -51,5 +63,6 @@ func newStatsChannel(manager manager.Manager, container *containers.ContainerInf
 	return &statsChannel{
 		manager:   manager,
 		container: container,
+		closed:    false,
 	}
 }
