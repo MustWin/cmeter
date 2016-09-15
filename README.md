@@ -1,3 +1,3 @@
 # cMeter
 
-A container metering solution
+cMeter (Container Meter) provides tenant container hosts with a container metering SaaS solution. 
