@@ -37,3 +37,8 @@ func newEventChannel(cec *events.EventChannel) *eventChannel {
 func (ec *eventChannel) GetChannel() <-chan *containers.Event {
 	return ec.channel
 }
+
+func (ec *eventChannel) Close() error {
+	// TODO: may not need
+	return nil
+}

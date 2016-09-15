@@ -130,3 +130,13 @@ func (d *driver) GetContainer(ctx context.Context, name string) (*containers.Con
 
 	return convertContainerInfo(*info), nil
 }
+
+func (d *driver) GetContainerMetrics(ctx context.Context, container *containers.ContainerInfo) (containers.MetricsChannel, error) {
+	// TODO: do
+	return nil, nil
+}
+
+func (d *driver) CloseAllChannels(ctx context.Context) error {
+	// TODO: do
+	return nil
+}

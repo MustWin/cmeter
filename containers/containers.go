@@ -53,6 +53,6 @@ type Driver interface {
 	WatchEvents(ctx context.Context, types ...EventType) (EventsChannel, error)
 	GetContainers(ctx context.Context) ([]*ContainerInfo, error)
 	GetContainer(ctx context.Context, name string) (*ContainerInfo, error)
-	GetContainerMetrics(ctx context.Context, container *containers.ContainerInfo) (MetricsChannel, error)
+	GetContainerMetrics(ctx context.Context, container *ContainerInfo) (MetricsChannel, error)
 	CloseAllChannels(ctx context.Context) error
 }

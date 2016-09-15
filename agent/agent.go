@@ -9,13 +9,12 @@ import (
 	containersFactory "github.com/MustWin/cmeter/containers/factory"
 	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
-	collectionsEmitter "github.com/MustWin/cmeter/pipeline/emitters/collections"
-	eventsEmitter "github.com/MustWin/cmeter/pipeline/emitters/events"
 	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
 	registryFilter "github.com/MustWin/cmeter/pipeline/filters/registry"
 	resolveContainerFilter "github.com/MustWin/cmeter/pipeline/filters/resolvecontainer"
 	resolveServiceFilter "github.com/MustWin/cmeter/pipeline/filters/resolveservice"
 	"github.com/MustWin/cmeter/pipeline/messages/containerdiscovery"
+	"github.com/MustWin/cmeter/pipeline/messages/containersample"
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
 )
 
@@ -24,7 +23,7 @@ type Agent struct {
 
 	config *configuration.Config
 
-	collector collector.Collector
+	collector *collector.Collector
 
 	pipeline pipeline.Pipeline
 
@@ -41,7 +40,7 @@ func (agent *Agent) Run() error {
 		return fmt.Errorf("error initializing container states: %v", err)
 	}
 
-	go agent.ProcessCollections()
+	go agent.ProcessSamples()
 	return agent.ProcessEvents()
 }
 
@@ -78,16 +77,22 @@ func (agent *Agent) ProcessEvents() error {
 	return nil
 }
 
-func (agent *Agent) ProcessCollections() {
+func (agent *Agent) ProcessSamples() {
 	// TODO: this
-	for agent.collector.GetChannel() 
+	for sample := range agent.collector.GetChannel() {
+		m := containersample.NewMessage(sample)
+		err := agent.pipeline.Send(agent, m)
+		if err != nil {
+			// TODO: log
+		}
+	}
 }
 
 func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 	context.GetLogger(ctx).Info("initializing agent")
 
 	registry := containers.NewRegistry()
-	collector := collector.New(agent)
+	collector := collector.New(config.Collector)
 
 	containersParams := config.Containers.Parameters()
 	if containersParams == nil {
