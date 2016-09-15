@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/MustWin/cmeter/collector"
 	"github.com/MustWin/cmeter/configuration"
@@ -40,8 +41,12 @@ func (agent *Agent) Run() error {
 		return fmt.Errorf("error initializing container states: %v", err)
 	}
 
-	go agent.ProcessSamples()
-	return agent.ProcessEvents()
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go agent.ProcessSamples(wg)
+	go agent.ProcessEvents(wg)
+	wg.Wait()
+	return nil
 }
 
 func (agent *Agent) InitializeContainers() error {
@@ -53,38 +58,33 @@ func (agent *Agent) InitializeContainers() error {
 	context.GetLogger(agent).Infof("found %d active containers", len(containers))
 	for _, containerInfo := range containers {
 		m := containerdiscovery.NewMessage(containerInfo)
-		if err := agent.pipeline.Send(agent, m); err != nil {
-			return err
-		}
+		go agent.pipeline.Send(agent, m)
 	}
 
 	return nil
 }
 
-func (agent *Agent) ProcessEvents() error {
+func (agent *Agent) ProcessEvents(wg sync.WaitGroup) {
+	defer wg.Done()
 	eventChan, err := agent.containers.WatchEvents(agent, containers.EventContainerCreation, containers.EventContainerDeletion)
 	if err != nil {
-		return fmt.Errorf("error opening event channel: %v", err)
+		context.GetLogger(agent).Panicf("error opening event channel: %v", err)
 	}
 
 	context.GetLogger(agent).Info("event monitor started")
 	defer context.GetLogger(agent).Info("event monitor stopped")
 	for event := range eventChan.GetChannel() {
 		m := statechange.NewMessage(event)
-		agent.pipeline.Send(agent, m)
+		go agent.pipeline.Send(agent, m)
 	}
-
-	return nil
 }
 
-func (agent *Agent) ProcessSamples() {
-	// TODO: this
+func (agent *Agent) ProcessSamples(wg sync.WaitGroup) {
+	defer wg.Done()
+
 	for sample := range agent.collector.GetChannel() {
 		m := containersample.NewMessage(sample)
-		err := agent.pipeline.Send(agent, m)
-		if err != nil {
-			// TODO: log
-		}
+		go agent.pipeline.Send(agent, m)
 	}
 }
 

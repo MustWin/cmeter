@@ -8,8 +8,13 @@ import (
 
 type Context struct {
 	context.Context
-	stopped  bool
-	Pipeline Pipeline
+	stopped         bool
+	messageOverride Message
+	Pipeline        Pipeline
+}
+
+func (ctx *Context) SetMessage(m Message) {
+	ctx.messageOverride = m
 }
 
 func (ctx *Context) Stop() {
@@ -27,7 +32,7 @@ type Message interface {
 }
 
 type Pipeline interface {
-	Send(ctx context.Context, m Message) error
+	Send(ctx context.Context, m Message)
 }
 
 type Filter interface {
@@ -48,7 +53,7 @@ type simplePipe struct {
 	filters []Filter
 }
 
-func (pipe *simplePipe) Send(ctx context.Context, m Message) error {
+func (pipe *simplePipe) Send(ctx context.Context, m Message) {
 	ctx = context.WithLogger(ctx, context.GetLoggerWithFields(ctx, map[interface{}]interface{}{
 		"message.id":   m.ID(),
 		"message.type": m.Type(),
@@ -63,18 +68,24 @@ func (pipe *simplePipe) Send(ctx context.Context, m Message) error {
 	for _, filter := range pipe.filters {
 		err := filter.HandleMessage(pctx, m)
 		if err != nil {
-			return FilterError{
-				FilterName: filter.Name(),
-				Enclosed:   err,
-			}
+			// TODO: send error message
+			context.GetLoggerWithField(ctx, "filter.name", filter.Name()).Errorf("filter error processing message: %v", err)
+			break
+		}
+
+		if pctx.messageOverride != nil {
+			m = pctx.messageOverride
+			pctx.messageOverride = nil
+			pctx.Context = context.WithLogger(ctx, context.GetLoggerWithFields(ctx, map[interface{}]interface{}{
+				"message.id":   m.ID(),
+				"message.type": m.Type(),
+			}))
 		}
 
 		if pctx.Stopped() {
 			break
 		}
 	}
-
-	return nil
 }
 
 func New(filters ...Filter) Pipeline {

@@ -11,7 +11,7 @@ import (
 const NAME = "registry"
 
 type Filter struct {
-	trackingLabel string
+	TrackingLabel string
 	registry      *containers.Registry
 }
 
@@ -32,9 +32,7 @@ func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 	case statechange.TYPE:
 		details := m.Body().(*statechange.Details)
 		if details.State == containers.StateRunning {
-			if err := ctx.Pipeline.Send(ctx, containerdiscovery.NewMessage(details.Container)); err != nil {
-				return err
-			}
+			ctx.Pipeline.Send(ctx, containerdiscovery.NewMessage(details.Container))
 		}
 
 		if !filter.registry.IsRegistered(details.ContainerName) {
@@ -47,7 +45,7 @@ func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 
 func (filter *Filter) IsTrackable(info *containers.ContainerInfo) bool {
 	for k, _ := range info.Labels {
-		if k == filter.trackingLabel {
+		if k == filter.TrackingLabel {
 			return true
 		}
 	}
@@ -55,9 +53,9 @@ func (filter *Filter) IsTrackable(info *containers.ContainerInfo) bool {
 	return false
 }
 
-func New(registry *containers.Registry, trackingLabel string) *Filter {
+func New(registry *containers.Registry, TrackingLabel string) *Filter {
 	return &Filter{
-		trackingLabel: trackingLabel,
+		TrackingLabel: TrackingLabel,
 		registry:      registry,
 	}
 }

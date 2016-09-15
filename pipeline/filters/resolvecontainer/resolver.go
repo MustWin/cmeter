@@ -20,7 +20,7 @@ func (filter *filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 	switch m.Type() {
 	case statechange.TYPE:
 		details := m.Body().(*statechange.Details)
-		if details.Container == nil {
+		if details.Container == nil && details.State == containers.StateRunning {
 			info, err := filter.containers.GetContainer(ctx, details.ContainerName)
 			if err != nil {
 				return err

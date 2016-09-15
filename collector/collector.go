@@ -21,7 +21,7 @@ type Collector struct {
 	context.Context
 	Rate        time.Duration
 	collections map[string]*collectorData
-	outbound    chan *Sample
+	samples     chan *Sample
 	mutex       sync.Mutex
 }
 
@@ -50,7 +50,7 @@ func (c *Collector) Collect(ch containers.MetricsChannel) error {
 }
 
 func (c *Collector) GetChannel() <-chan *Sample {
-	return c.outbound
+	return c.samples
 }
 
 func (c *Collector) doCollect(data *collectorData) {
@@ -67,7 +67,7 @@ func (c *Collector) doCollect(data *collectorData) {
 					Metrics:   metrics,
 				}
 
-				c.outbound <- sample
+				c.samples <- sample
 			}
 		}
 	}
@@ -103,7 +103,7 @@ func (c *Collector) StopAll() ([]containers.MetricsChannel, error) {
 
 func New(config configuration.CollectorConfig) *Collector {
 	return &Collector{
-		Rate:     time.Duration(config.Rate) * time.Millisecond,
-		outbound: make(chan *Sample, CHANNEL_BUFFER_SIZE),
+		Rate:    time.Duration(config.Rate) * time.Millisecond,
+		samples: make(chan *Sample, CHANNEL_BUFFER_SIZE),
 	}
 }
