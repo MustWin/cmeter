@@ -1,0 +1,18 @@
+version: 0.1
+
+logging:
+    level: 'debug'
+    format: 'text'
+
+mockapi:
+    addr: 'localhost:9090'
+
+api:
+    addr: 'localhost:9090'
+
+collector:
+    tracking_label: 'com.example.org'
+    service_key_label: 'com.example.org'
+    sample_rate: 60
+
+containers: 'embedded'
