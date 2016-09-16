@@ -21,17 +21,18 @@ import (
 
 var parseOnce sync.Once
 
-const statsCacheDuration = 2 * time.Minute
-const maxHousekeepingInterval = 15 * time.Second
-const defaultHousekeepingInterval = 10 * time.Second
-const allowDynamicHousekeeping = true
+const (
+	statsCacheDuration          = 2 * time.Minute
+	maxHousekeepingInterval     = 15 * time.Second
+	defaultHousekeepingInterval = 10 * time.Second
+	allowDynamicHousekeeping    = true
+)
 
 func init() {
 	factory.Register("embedded", &driverFactory{})
 }
 
-type driverFactory struct {
-}
+type driverFactory struct{}
 
 func (factory *driverFactory) Create(parameters map[string]interface{}) (containers.Driver, error) {
 	if !flag.Parsed() {

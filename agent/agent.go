@@ -10,6 +10,7 @@ import (
 	containersFactory "github.com/MustWin/cmeter/containers/factory"
 	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
+	sampleCollectionFilter "github.com/MustWin/cmeter/pipeline/filters/collector"
 	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
 	registryFilter "github.com/MustWin/cmeter/pipeline/filters/registry"
 	resolveContainerFilter "github.com/MustWin/cmeter/pipeline/filters/resolvecontainer"
@@ -104,13 +105,16 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		return nil, err
 	}
 
-	context.GetLogger(ctx).Infof("using %q containers driver", config.Containers.Type())
+	log := context.GetLogger(ctx)
+	log.Infof("using %q containers driver", config.Containers.Type())
+	log.Infof("tracking containers with a %q label", config.Tracking.TrackingLabel)
 
 	filters := []pipeline.Filter{
 		logFilter.New(),
 		resolveContainerFilter.New(containersDriver),
 		registryFilter.New(registry, config.Tracking.TrackingLabel),
 		resolveServiceFilter.New(registry, config.Tracking.ServiceKeyLabel),
+		sampleCollectionFilter.New(containersDriver, collector),
 	}
 
 	pipeline := pipeline.New(filters...)
