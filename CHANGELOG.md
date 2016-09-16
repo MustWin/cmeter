@@ -4,8 +4,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- something else
 
-## [0.0.1-alpha] - YYYY-MM-DD
+## [0.0.1] - 2016-09-16
 ### Added
-- something
+- basic pipeline implementation for processing messages
+- development config
+- overridable and automatic build versioning support in Makefile
+- embedded cAdvisor containers driver
+- reporting driver abstraction
+- containers driver abstraction
+- basic README
+- VERSION file
+- this Changelog
+- basic Makefile with `all`, `clean`, and `compile` targets
