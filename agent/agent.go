@@ -107,11 +107,11 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 
 	log := context.GetLogger(ctx)
 	log.Infof("using %q containers driver", config.Containers.Type())
-	log.Infof("tracking containers with a %q label", config.Tracking.TrackingLabel)
+	log.Infof("tracking containers with %q label", config.Tracking.TrackingLabel)
 
 	filters := []pipeline.Filter{
 		logFilter.New(),
-		resolveContainerFilter.New(containersDriver),
+		resolveContainerFilter.New(containersDriver, registry),
 		registryFilter.New(registry, config.Tracking.TrackingLabel),
 		resolveServiceFilter.New(registry, config.Tracking.ServiceKeyLabel),
 		sampleCollectionFilter.New(containersDriver, collector),

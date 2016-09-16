@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -77,7 +78,7 @@ func init() {
 		if f := flag.Lookup(name); f != nil {
 			f.DefValue = defaultValue
 			f.Value.Set(defaultValue)
-			// TODO: can't log error here but marking as a *maybe* and might find a more elegant approach for this
+			// TODO: can't log error here but marking as a *maybe* and might find a better approach for this
 			//log.Errorf("Expected cAdvisor flag %q not found", name)
 		}
 	}
@@ -124,9 +125,17 @@ func (d *driver) GetContainers(ctx context.Context) ([]*containers.ContainerInfo
 }
 
 func (d *driver) GetContainer(ctx context.Context, name string) (*containers.ContainerInfo, error) {
+	if !d.manager.Exists(name) {
+		return nil, containers.ErrContainerNotFound
+	}
+
 	r := &v1.ContainerInfoRequest{NumStats: 0}
 	info, err := d.manager.GetContainerInfo(name, r)
 	if err != nil {
+		if strings.Contains(err.Error(), "unable to find data for container") {
+			return nil, containers.ErrContainerNotFound
+		}
+
 		return nil, err
 	}
 
@@ -135,12 +144,13 @@ func (d *driver) GetContainer(ctx context.Context, name string) (*containers.Con
 
 func (d *driver) GetContainerStats(ctx context.Context, container *containers.ContainerInfo) (containers.StatsChannel, error) {
 	if !d.manager.Exists(container.Name) {
-		return nil, errors.New("container does not exist")
+		return nil, containers.ErrContainerNotFound
 	}
 
 	return newStatsChannel(d.manager, container), nil
 }
 
 func (d *driver) CloseAllChannels(ctx context.Context) error {
+	// TODO: determine need and complete
 	return nil
 }

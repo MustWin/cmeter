@@ -23,7 +23,6 @@ func (filter *filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 	case statechange.TYPE:
 		details := m.Body().(*statechange.Details)
 		context.GetLoggerWithField(ctx, "container.name", details.ContainerName).Infof("state => %s", details.State)
-		ctx.Stop()
 	}
 
 	return nil
