@@ -10,4 +10,4 @@ clean:
 	go clean ./...
 
 compile:
-	CGO_ENABLED=0 go build -ldflags "-X main.appVersion=$(APP_VERSION)" main.go
+	go build -ldflags "-X main.appVersion=$(APP_VERSION)" .
