@@ -22,7 +22,7 @@ func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 	switch m.Type() {
 	case transmit.TYPE:
 		event := m.Body().(*api.Event)
-		if err := filter.client.Send(event); err != nil {
+		if err := filter.client.Send(ctx, event); err != nil {
 			return fmt.Errorf("couldn't send event: %v", err)
 		}
 

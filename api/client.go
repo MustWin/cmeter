@@ -2,10 +2,11 @@ package api
 
 import (
 	"github.com/MustWin/cmeter/configuration"
+	"github.com/MustWin/cmeter/context"
 )
 
 type Client interface {
-	Send(e *Event) error
+	Send(ctx context.Context, e *Event) error
 }
 
 type Event struct {
@@ -20,7 +21,7 @@ type client struct {
 	remoteAddr string
 }
 
-func (c *client) Send(e *Event) error {
+func (c *client) Send(ctx context.Context, e *Event) error {
 	return nil
 }
 
