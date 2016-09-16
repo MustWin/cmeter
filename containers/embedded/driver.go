@@ -1,7 +1,6 @@
 package embedded
 
 import (
-	"errors"
 	"flag"
 	"net/http"
 	"strings"

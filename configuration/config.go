@@ -142,6 +142,7 @@ type Config struct {
 	MockApi    MockApiConfig   `yaml:"mockapi"`
 	Collector  CollectorConfig `yaml:"collector"`
 	Tracking   TrackerConfig   `yaml:"tracking"`
+	Api        ApiConfig       `yaml:"api"`
 }
 
 type ApiConfig struct {

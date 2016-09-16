@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/MustWin/cmeter/api"
 	"github.com/MustWin/cmeter/collector"
 	"github.com/MustWin/cmeter/configuration"
 	"github.com/MustWin/cmeter/containers"
@@ -15,6 +16,7 @@ import (
 	registryFilter "github.com/MustWin/cmeter/pipeline/filters/registry"
 	resolveContainerFilter "github.com/MustWin/cmeter/pipeline/filters/resolvecontainer"
 	resolveServiceFilter "github.com/MustWin/cmeter/pipeline/filters/resolveservice"
+	uplinkFilter "github.com/MustWin/cmeter/pipeline/filters/uplink"
 	"github.com/MustWin/cmeter/pipeline/messages/containerdiscovery"
 	"github.com/MustWin/cmeter/pipeline/messages/containersample"
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
@@ -32,6 +34,8 @@ type Agent struct {
 	containers containers.Driver
 
 	registry *containers.Registry
+
+	api api.Client
 }
 
 func (agent *Agent) Run() error {
@@ -94,6 +98,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 
 	registry := containers.NewRegistry()
 	collector := collector.New(config.Collector)
+	apiClient := api.NewClient(config.Api)
 
 	containersParams := config.Containers.Parameters()
 	if containersParams == nil {
@@ -115,6 +120,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		registryFilter.New(registry, config.Tracking.TrackingLabel),
 		resolveServiceFilter.New(registry, config.Tracking.ServiceKeyLabel),
 		sampleCollectionFilter.New(containersDriver, collector),
+		uplinkFilter.New(apiClient),
 	}
 
 	pipeline := pipeline.New(filters...)
@@ -126,5 +132,6 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		collector:  collector,
 		pipeline:   pipeline,
 		registry:   registry,
+		api:        apiClient,
 	}, nil
 }
