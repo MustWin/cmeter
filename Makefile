@@ -1,6 +1,8 @@
 VERSION_FILE=VERSION
 REV=$(shell git rev-parse --short HEAD)
-APP_VERSION=$(shell cat $(VERSION_FILE))-$(REV)
+ifeq ($(BUILD_VERSION),)
+	BUILD_VERSION=$(shell cat $(VERSION_FILE))-$(REV)
+endif
 
 .PHONY: clean
 
@@ -10,4 +12,4 @@ clean:
 	go clean ./...
 
 compile:
-	go build -ldflags "-X main.appVersion=$(APP_VERSION)" .
+	go build -ldflags "-X main.appVersion=$(BUILD_VERSION)" .
