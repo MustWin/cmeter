@@ -7,9 +7,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.0.1] - 2016-09-16
 ### Added
+- `generic` reporting driver
+- select reporting driver in config file's `reporting` directive
+- select containers driver in config file's `containers` directive
+- `cmeterapi` reporting driver
 - reporting driver factory registration
 - containers driver factory registration
-- mock reporting driver that just logs stuff out
+- `mock` reporting driver that just logs stuff out
 - basic pipeline implementation for processing messages
 - development config
 - overridable and automatic build versioning support in Makefile

@@ -14,6 +14,6 @@ tracking:
 collector:
   rate: 1800
 
-reporter: 'mock'
+reporting: 'mock'
 
 containers: 'embedded'

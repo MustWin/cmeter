@@ -20,6 +20,8 @@ import (
 	"github.com/MustWin/cmeter/pipeline/messages/containerdiscovery"
 	"github.com/MustWin/cmeter/pipeline/messages/containersample"
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
+	"github.com/MustWin/cmeter/reporting"
+	reportingFactory "github.com/MustWin/cmeter/reporting/factory"
 )
 
 type Agent struct {
@@ -35,7 +37,7 @@ type Agent struct {
 
 	registry *containers.Registry
 
-	api api.Client
+	reporting reporting.Driver
 }
 
 func (agent *Agent) Run() error {
@@ -110,9 +112,15 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		return nil, err
 	}
 
+	reportingParams := config.Reporting.Parameters()
+	if reportingParams == nil {
+		reportingParams = make(configuration.Parameters)
+	}
+
 	log := context.GetLogger(ctx)
 	log.Infof("using %q containers driver", config.Containers.Type())
-	log.Infof("tracking containers with %q label", config.Tracking.TrackingLabel)
+	log.Infof("using %q reporting driver", config.Reporting.Type())
+	log.Infof("tracking %q label", config.Tracking.TrackingLabel)
 
 	filters := []pipeline.Filter{
 		logFilter.New(),
@@ -120,7 +128,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		registryFilter.New(registry, config.Tracking.TrackingLabel),
 		resolveServiceFilter.New(registry, config.Tracking.ServiceKeyLabel),
 		sampleCollectionFilter.New(containersDriver, collector),
-		uplinkFilter.New(apiClient),
+		reportingFilter.New(reportingDriver),
 	}
 
 	pipeline := pipeline.New(filters...)
@@ -132,6 +140,6 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		collector:  collector,
 		pipeline:   pipeline,
 		registry:   registry,
-		api:        apiClient,
+		reporting:  reportingDriver,
 	}, nil
 }
