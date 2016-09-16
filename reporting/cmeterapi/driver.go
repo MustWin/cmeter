@@ -1,7 +1,7 @@
 package cmeterapi
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/reporting"
