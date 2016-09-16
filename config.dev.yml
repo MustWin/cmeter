@@ -2,7 +2,7 @@ version: 0.1
 
 logging:
     level: 'debug'
-    format: 'text'
+    formatter: 'text'
 
 mockapi:
     addr: 'localhost:9090'
@@ -12,7 +12,7 @@ api:
 
 collector:
     tracking_label: 'com.example.org'
-    service_key_label: 'com.example.org'
-    sample_rate: 60
+    key_label: 'com.example.org'
+    rate: 1800
 
 containers: 'embedded'
