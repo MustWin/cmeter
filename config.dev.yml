@@ -10,9 +10,11 @@ mockapi:
 api:
     addr: 'localhost:9090'
 
+tracking:
+    tracking_label: 'com.example.track'
+    key_label: 'com.example.track'
+
 collector:
-    tracking_label: 'com.example.org'
-    key_label: 'com.example.org'
     rate: 1800
 
 containers: 'embedded'
