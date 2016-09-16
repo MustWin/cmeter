@@ -7,6 +7,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.0.1] - 2016-09-16
 ### Added
+- reporting driver factory registration
+- containers driver factory registration
+- mock reporting driver that just logs stuff out
 - basic pipeline implementation for processing messages
 - development config
 - overridable and automatic build versioning support in Makefile

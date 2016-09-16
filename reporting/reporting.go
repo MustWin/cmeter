@@ -1,7 +1,6 @@
 package reporting
 
 import (
-	"github.com/MustWin/cmeter/configuration"
 	"github.com/MustWin/cmeter/context"
 )
 
@@ -16,5 +15,5 @@ type Event struct {
 }
 
 type Driver interface {
-	Report(ctx context.Context, e *Event) (string, error)
+	Report(ctx context.Context, e *Event) (Receipt, error)
 }

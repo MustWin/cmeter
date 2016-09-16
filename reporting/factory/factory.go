@@ -24,7 +24,7 @@ func Register(name string, factory ReportingDriverFactory) {
 	reportingFactories[name] = factory
 }
 
-func Create(name string, parameters map[string]interface{}) (containers.Driver, error) {
+func Create(name string, parameters map[string]interface{}) (reporting.Driver, error) {
 	if factory, ok := reportingFactories[name]; ok {
 		return factory.Create(parameters)
 	}
