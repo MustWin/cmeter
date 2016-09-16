@@ -14,11 +14,15 @@ import (
 	"github.com/MustWin/cmeter/context"
 )
 
-const VERSION = "0.0.1-alpha"
+var appVersion string
 
 func main() {
+	if appVersion == "" {
+		appVersion = "0.0.0-dev"
+	}
+
 	rand.Seed(time.Now().Unix())
-	ctx := context.WithVersion(context.Background(), VERSION)
+	ctx := context.WithVersion(context.Background(), appVersion)
 
 	dispatch := cmd.CreateDispatcher(ctx, root.Info)
 	if err := dispatch(); err != nil {
