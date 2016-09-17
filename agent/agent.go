@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/MustWin/cmeter/api"
 	"github.com/MustWin/cmeter/collector"
 	"github.com/MustWin/cmeter/configuration"
 	"github.com/MustWin/cmeter/containers"
@@ -14,9 +13,9 @@ import (
 	sampleCollectionFilter "github.com/MustWin/cmeter/pipeline/filters/collector"
 	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
 	registryFilter "github.com/MustWin/cmeter/pipeline/filters/registry"
+	reportingFilter "github.com/MustWin/cmeter/pipeline/filters/reporter"
 	resolveContainerFilter "github.com/MustWin/cmeter/pipeline/filters/resolvecontainer"
 	resolveServiceFilter "github.com/MustWin/cmeter/pipeline/filters/resolveservice"
-	uplinkFilter "github.com/MustWin/cmeter/pipeline/filters/uplink"
 	"github.com/MustWin/cmeter/pipeline/messages/containerdiscovery"
 	"github.com/MustWin/cmeter/pipeline/messages/containersample"
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
@@ -100,7 +99,6 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 
 	registry := containers.NewRegistry()
 	collector := collector.New(config.Collector)
-	apiClient := api.NewClient(config.Api)
 
 	containersParams := config.Containers.Parameters()
 	if containersParams == nil {
@@ -115,6 +113,11 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 	reportingParams := config.Reporting.Parameters()
 	if reportingParams == nil {
 		reportingParams = make(configuration.Parameters)
+	}
+
+	reportingDriver, err := reportingFactory.Create(config.Reporting.Type(), reportingParams)
+	if err != nil {
+		return nil, err
 	}
 
 	log := context.GetLogger(ctx)

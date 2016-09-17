@@ -30,69 +30,69 @@ func (version *Version) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 type Parameters map[string]interface{}
 
-type Containers map[string]Parameters
+type Driver map[string]Parameters
 
-func (containers Containers) Type() string {
-	var containersType []string
+func (driver Driver) Type() string {
+	var driverType []string
 
-	for k := range containers {
-		containersType = append(containersType, k)
+	for k := range driver {
+		driverType = append(driverType, k)
 	}
 
-	if len(containersType) > 1 {
-		panic("multiple containers drivers specified in the configuration or environment: " + strings.Join(containersType, ", "))
+	if len(driverType) > 1 {
+		panic("multiple drivers specified in the configuration or environment: %s" + strings.Join(driverType, ", "))
 	}
 
-	if len(containersType) == 1 {
-		return containersType[0]
+	if len(driverType) == 1 {
+		return driverType[0]
 	}
 
 	return ""
 }
 
-func (containers Containers) Parameters() Parameters {
-	return containers[containers.Type()]
+func (driver Driver) Parameters() Parameters {
+	return driver[driver.Type()]
 }
 
-func (containers Containers) setParameter(key string, value interface{}) {
-	containers[containers.Type()][key] = value
+func (driver Driver) setParameter(key string, value interface{}) {
+	driver[driver.Type()][key] = value
 }
 
-func (containers *Containers) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var containersMap map[string]Parameters
-	err := unmarshal(&containersMap)
-	if err == nil && len(containersMap) > 1 {
-		types := make([]string, 0, len(containersMap))
-		for k := range containersMap {
+func (driver *Driver) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var driverMap map[string]Parameters
+	err := unmarshal(&driverMap)
+	if err == nil && len(driverMap) > 1 {
+		types := make([]string, 0, len(driverMap))
+		for k := range driverMap {
 			types = append(types, k)
 		}
 
 		if len(types) > 1 {
-			return fmt.Errorf("Must provide exactly one containers type. provided: %v", types)
+			return fmt.Errorf("Must provide exactly one driver type. provided: %v", types)
 		}
 
-		*containers = containersMap
+		*driver = driverMap
 		return nil
 	}
 
-	var containersType string
-	if err = unmarshal(&containersType); err != nil {
+	var driverType string
+	if err = unmarshal(&driverType); err != nil {
 		return err
 	}
 
-	*containers = Containers{
-		containersType: Parameters{},
+	*driver = Driver{
+		driverType: Parameters{},
 	}
 
 	return nil
 }
 
-func (containers Containers) MarshalYAML() (interface{}, error) {
-	if containers.Parameters() == nil {
-		return containers.Type(), nil
+func (driver Driver) MarshalYAML() (interface{}, error) {
+	if driver.Parameters() == nil {
+		return driver.Type(), nil
 	}
 
-	return map[string]Parameters(containers), nil
+	return map[string]Parameters(driver), nil
 }
 
 type MockApiConfig struct {
@@ -138,15 +138,11 @@ type TrackerConfig struct {
 
 type Config struct {
 	Log        LogConfig       `yaml:"log"`
-	Containers Containers      `yaml:"containers"`
+	Containers Driver          `yaml:"containers"`
+	Reporting  Driver          `yaml:"reporting"`
 	MockApi    MockApiConfig   `yaml:"mockapi"`
 	Collector  CollectorConfig `yaml:"collector"`
 	Tracking   TrackerConfig   `yaml:"tracking"`
-	Api        ApiConfig       `yaml:"api"`
-}
-
-type ApiConfig struct {
-	Addr string `yaml:"addr,omitempty"`
 }
 
 type v0_1Config Config
@@ -159,16 +155,21 @@ func newConfig() *Config {
 			Fields:    make(map[string]interface{}),
 		},
 
-		Containers: make(Containers),
+		Containers: make(Driver),
+
+		Reporting: make(Driver),
 
 		MockApi: MockApiConfig{
 			Addr: ":9090",
 		},
 
+		Tracking: TrackerConfig{
+			ServiceKeyLabel: "com.cmeter.track",
+			TrackingLabel:   "com.cmeter.track",
+		},
+
 		Collector: CollectorConfig{
-			Rate:          10000,
-			KeyLabel:      "com.cmeter.service",
-			TrackingLabel: "com.cmeter.track",
+			Rate: 10000,
 		},
 	}
 
