@@ -14,14 +14,10 @@ tracking:
 collector:
   rate: 1800
 
-# The reporting driver and driver parameters
-# parameterless form
-reporting: 'mock'
+reporting: 
+  mock: true
+#  cmeterapi:
+#    addr: 'localhost:9090'
 
-# with driver parameters
-#reporting:
-#  mock:
-#    parameter1: 'foo'
-
-
-containers: 'embedded'
+containers: 
+  embedded: true
