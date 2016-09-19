@@ -4,9 +4,6 @@ logging:
   level: 'debug'
   formatter: 'text'
 
-mockapi:
-  addr: 'localhost:9090'
-
 tracking:
   tracking_label: 'com.example.track'
   key_label: 'com.example.track'
