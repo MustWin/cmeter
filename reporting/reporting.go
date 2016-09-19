@@ -7,11 +7,10 @@ import (
 type Receipt string
 
 type Event struct {
-	MeterID    string      `json:"meter_id"`
-	Type       string      `json:"event_type"`
-	ServiceKey string      `json:"service_key"`
-	Timestamp  int64       `json:"timestamp"`
-	Data       interface{} `json:"data"`
+	MeterID   string      `json:"meter_id"`
+	Type      string      `json:"event_type"`
+	Timestamp int64       `json:"timestamp"`
+	Data      interface{} `json:"data"`
 }
 
 type Driver interface {
