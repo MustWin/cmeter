@@ -1,5 +1,7 @@
 # cMeter
 
+![cMeter logo](https://github.com/MustWin/cmeter/blob/master/docs/logo/cmeter-logo-title.png)
+
 cMeter (Container Meter) provides tenant container hosts with a container metering solution. 
 
 ## Installation
