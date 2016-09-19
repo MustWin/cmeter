@@ -21,8 +21,7 @@ A configuration file is *required* for cMeter but environment variables can be u
 
 All configuration environment variables are prefixed by `CMETER_`
 
-**Note:** a development configuration file is included: `/config.dev.yml`. 
-**Note:** a `/config.local.yml` is already added to gitignore and can be used for local testing or development.
+A development configuration file is included: `/config.dev.yml` and a `/config.local.yml` has already been added to gitignore to be used for local testing or development.
 
 
 ```yaml
