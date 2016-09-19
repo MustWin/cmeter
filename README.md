@@ -52,9 +52,6 @@ tracking:
   # the label used to determine if a container should be tracked and metered
   tracking_label: 'com.example.track'
 
-  # the label used as the service key value when sending container reports.
-  key_label: 'com.example.track'
-
 # stats collection stuff
 collector:
   # The rate at which the collector polls for container stats.

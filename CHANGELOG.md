@@ -6,7 +6,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 - the `api` command.
 - `mockapi` configuration section.
-- mock api server
+- mock api server.
+- `tracking.key_label` configuration value.
 
 ## [0.0.1] - 2016-09-19
 ### Added

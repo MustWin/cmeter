@@ -95,10 +95,6 @@ func (driver Driver) MarshalYAML() (interface{}, error) {
 	return map[string]Parameters(driver), nil
 }
 
-type MockApiConfig struct {
-	Addr string
-}
-
 type LogLevel string
 
 func (logLevel *LogLevel) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -126,21 +122,17 @@ type LogConfig struct {
 }
 
 type CollectorConfig struct {
-	Rate          int64  `yaml:"rate"`
-	KeyLabel      string `yaml:"key_label,omitempty"`
-	TrackingLabel string `yaml:"tracking_label,omitempty"`
+	Rate int64 `yaml:"rate"`
 }
 
 type TrackerConfig struct {
-	ServiceKeyLabel string `yaml:"service_key_label,omitempty"`
-	TrackingLabel   string `yaml:"tracking_label,omitempty"`
+	TrackingLabel string `yaml:"tracking_label,omitempty"`
 }
 
 type Config struct {
 	Log        LogConfig       `yaml:"log"`
 	Containers Driver          `yaml:"containers"`
 	Reporting  Driver          `yaml:"reporting"`
-	MockApi    MockApiConfig   `yaml:"mockapi"`
 	Collector  CollectorConfig `yaml:"collector"`
 	Tracking   TrackerConfig   `yaml:"tracking"`
 }
@@ -159,13 +151,8 @@ func newConfig() *Config {
 
 		Reporting: make(Driver),
 
-		MockApi: MockApiConfig{
-			Addr: ":9090",
-		},
-
 		Tracking: TrackerConfig{
-			ServiceKeyLabel: "com.cmeter.track",
-			TrackingLabel:   "com.cmeter.track",
+			TrackingLabel: "com.cmeter.track",
 		},
 
 		Collector: CollectorConfig{

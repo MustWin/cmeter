@@ -16,7 +16,6 @@ import (
 	registryFilter "github.com/MustWin/cmeter/pipeline/filters/registry"
 	reportingFilter "github.com/MustWin/cmeter/pipeline/filters/reporter"
 	resolveContainerFilter "github.com/MustWin/cmeter/pipeline/filters/resolvecontainer"
-	resolveServiceFilter "github.com/MustWin/cmeter/pipeline/filters/resolveservice"
 	"github.com/MustWin/cmeter/pipeline/messages/containerdiscovery"
 	"github.com/MustWin/cmeter/pipeline/messages/containersample"
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
@@ -130,7 +129,6 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		logFilter.New(),
 		resolveContainerFilter.New(containersDriver, registry),
 		registryFilter.New(registry, config.Tracking.TrackingLabel),
-		resolveServiceFilter.New(registry, config.Tracking.ServiceKeyLabel),
 		sampleCollectionFilter.New(containersDriver, collector),
 		reportingFilter.New(reportingDriver),
 		notHandledFilter.New(),
