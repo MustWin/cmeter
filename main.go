@@ -18,9 +18,11 @@ import (
 
 var appVersion string
 
+const DEFAULT_VERSION = "0.0.0-dev"
+
 func main() {
 	if appVersion == "" {
-		appVersion = "0.0.0-dev"
+		appVersion = DEFAULT_VERSION
 	}
 
 	rand.Seed(time.Now().Unix())
