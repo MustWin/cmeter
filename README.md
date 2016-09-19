@@ -47,11 +47,6 @@ logging:
   # log output format: `text` or `json`
   formatter: 'text'
 
-# (deprecated) mockapi server stuff
-mockapi:
-  # address to host the mockapi http server
-  addr: 'localhost:9090'
-
 # container tracking stuff
 tracking:
   # the label used to determine if a container should be tracked and metered
