@@ -7,7 +7,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.0.1] - 2016-09-16
 ### Added
-- `generic` reporting driver
 - select reporting driver in config file's `reporting` directive
 - select containers driver in config file's `containers` directive
 - `cmeterapi` reporting driver
