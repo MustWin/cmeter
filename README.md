@@ -97,11 +97,11 @@ Please note the version number displayed will be the value of `main.DEFAULT_VERS
 
 Use `make` to create a versioned build:
 
-> $ make build
+> $ make compile
 
 The default version is a semver-compatible string made up of the contents of the `/VERSION` file and the short form of the current git hash (e.g: `1.0.0-c63076f`). To override this default version, you may use the `BUILD_VERSION` environment variable to set it manually:
 
-> $ BUILD_VERSION=7.7.7-lucky make build
+> $ BUILD_VERSION=7.7.7-lucky make compile
 
 ## Testing
 
