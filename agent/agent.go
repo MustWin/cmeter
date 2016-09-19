@@ -12,6 +12,7 @@ import (
 	"github.com/MustWin/cmeter/pipeline"
 	sampleCollectionFilter "github.com/MustWin/cmeter/pipeline/filters/collector"
 	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
+	notHandledFilter "github.com/MustWin/cmeter/pipeline/filters/nothandled"
 	registryFilter "github.com/MustWin/cmeter/pipeline/filters/registry"
 	reportingFilter "github.com/MustWin/cmeter/pipeline/filters/reporter"
 	resolveContainerFilter "github.com/MustWin/cmeter/pipeline/filters/resolvecontainer"
@@ -132,6 +133,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		resolveServiceFilter.New(registry, config.Tracking.ServiceKeyLabel),
 		sampleCollectionFilter.New(containersDriver, collector),
 		reportingFilter.New(reportingDriver),
+		notHandledFilter.New(),
 	}
 
 	pipeline := pipeline.New(filters...)
