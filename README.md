@@ -12,7 +12,7 @@ cMeter (Container Meter) provides tenant container hosts with a container meteri
 
 **Example** - with development config:
 
-> $ ./cmeter agent ./config.dev.yml
+> $ cmeter agent ./config.dev.yml
 
 
 ## Configuration
@@ -75,7 +75,7 @@ One caveat with building currently is that because of the cAdvisor dependency fo
 
 #### Dev/Local build
 
-Use `go` and build from the root of the project: 
+Use `go` and build from the root of the project:
 
 > $ go build
 
@@ -83,14 +83,14 @@ Please note the version number displayed will be the value of `main.DEFAULT_VERS
 
 #### Versioned build
 
-A versioned build is made using `make`:
+Use `make` to create a versioned build:
 
 > $ make build
 
-The default version is a semver-compatible string made up of the contents of the `/VERSION` file and the short form of the current git hash. To override this default version, you may use the `BUILD_VERSION` environment variable to set it manually:
+The default version is a semver-compatible string made up of the contents of the `/VERSION` file and the short form of the current git hash (e.g: `1.0.0-c63076f`). To override this default version, you may use the `BUILD_VERSION` environment variable to set it manually:
 
 > $ BUILD_VERSION=7.7.7-lucky make build
 
 ## Testing
 
-There are currently no tests but this would likely use `make`.
+There are currently no tests but this would likely use `make` or simply `go test ./...`
