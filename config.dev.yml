@@ -14,6 +14,13 @@ reporting:
   mock: true
 #  cmeterapi:
 #    addr: 'localhost:9090'
+#  http:
+#    url: 'http://example.org/events'
+#    method: 'POST'
+#    receipt_header: 'X-CMETER-RECEIPT'
+#    headers:
+#      x-user-header-1: 'foo'
+#      x-user-header-2: 'boo'
 
-containers: 
+containers:
   embedded: true

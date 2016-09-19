@@ -6,6 +6,8 @@ import (
 
 type Receipt string
 
+const EmptyReceipt Receipt = ""
+
 type Event struct {
 	MeterID   string      `json:"meter_id"`
 	Type      string      `json:"event_type"`
