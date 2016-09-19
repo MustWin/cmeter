@@ -6,6 +6,18 @@ cMeter (Container Meter) provides tenant container hosts with a container meteri
 
 > $ go get github.com/MustWin/cmeter
 
+### Tools
+
+These are tools used for development.
+
+#### Vendoring
+
+cMeter uses `gvt` to track and vendor dependencies, install with:
+
+> $ go get github.com/FiloSottile/gvt
+
+For details on usage, see [the project's github](https://github.com/FiloSottile/gvt).
+
 ## Usage
 
 > $ cmeter agent <config_path>
@@ -94,3 +106,4 @@ The default version is a semver-compatible string made up of the contents of the
 ## Testing
 
 There are currently no tests but this would likely use `make` or simply `go test ./...`
+
