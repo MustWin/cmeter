@@ -105,9 +105,12 @@ This is primarily meant to be used when building the docker image. Distribution 
 
 #### Docker Image
 
-Building a Docker Image is a two-step process:
+Building a Docker Image is a two-step process because of the CGO requirement and the desire to keep a small image size. First we build the distribution binary:
 
 > $ make dist
+
+And then we can make the image:
+
 > $ make image
 
 The default image repo used is that of the Makefile's `DOCKER_REPO` variable. The image tag is the `BUILD_VERSION` variable and can be overridden as noted in the *"Local versioned build"* section above.
