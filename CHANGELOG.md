@@ -4,7 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+- docker image building with Makefile's `image` target
+- `dist` Makefile target, for use with the docker image build.
 - `http` reporting driver for generic http reporting.
+- first test!
 
 ### Removed
 - the `api` command.
