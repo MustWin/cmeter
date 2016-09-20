@@ -176,7 +176,10 @@ func (p *Parser) overwriteStruct(v reflect.Value, fullpath string, path []string
 
 	fi, present := uppercase[path[0]]
 	if !present {
-		logrus.Warnf("Ignoring unrecognized environment variable %s", fullpath)
+		if fullpath != "CMETER_CONFIG_PATH" {
+			logrus.Warnf("Ignoring unrecognized environment variable %s", fullpath)
+		}
+
 		return nil
 	}
 
