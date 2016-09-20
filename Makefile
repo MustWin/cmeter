@@ -15,8 +15,8 @@ clean:
 compile:
 	go build -ldflags "-X main.appVersion=$(BUILD_VERSION)" .
 
-compile-dist:
+dist:
 	GOOS=linux go build -ldflags "-X main.appVersion=$(BUILD_VERSION)" -o dist .
 
 image:
-	docker build -t $(DOCKER_REPO) .
+	docker build -t $(DOCKER_REPO):BUILD_VERSION .
