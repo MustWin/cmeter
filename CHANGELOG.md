@@ -5,11 +5,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `http` reporting driver for generic http reporting
+
 ### Removed
 - the `api` command.
 - `mockapi` configuration section.
 - mock api server.
 - `tracking.key_label` configuration value.
+
 
 ## [0.0.1] - 2016-09-19
 ### Added
