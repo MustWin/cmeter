@@ -1,11 +1,12 @@
 DOCKER_REPO=test/cmeter
 VERSION_FILE=VERSION
+SRC_PKGS=$(shell go list ./... | grep -v vendor)
 REV=$(shell git rev-parse --short HEAD)
 ifeq ($(BUILD_VERSION),)
 	BUILD_VERSION=$(shell cat $(VERSION_FILE))-$(REV)
 endif
 
-.PHONY: clean image
+.PHONY: clean image test
 
 all: compile
 
@@ -19,7 +20,11 @@ dist:
 	GOOS=linux go build -ldflags "-X main.appVersion=$(BUILD_VERSION)" -o dist .
 
 image:
-	docker build -t $(DOCKER_REPO):BUILD_VERSION .
+	docker build -t $(DOCKER_REPO):$(BUILD_VERSION) .
 
 test:
-	go test -v ./...
+	set -e; 
+	for pkg in $(SRC_PKGS); \
+	do \
+		go test -v $$pkg; \
+	done 

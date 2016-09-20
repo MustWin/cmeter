@@ -1,8 +1,6 @@
 package devnull
 
 import (
-	"sync"
-
 	"github.com/MustWin/cmeter/pipeline"
 )
 

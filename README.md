@@ -117,5 +117,10 @@ The default image repo used is that of the Makefile's `DOCKER_REPO` variable. Th
 
 ## Testing
 
-There are currently no tests but this would likely use `make` or simply `go test ./...`
+Use `make` to run tests:
 
+> $ make test
+
+You can also use `go test` directly for any package without additional bootstrapping:
+
+> $ go test ./agent/
