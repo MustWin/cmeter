@@ -57,6 +57,8 @@ func (filter *Filter) IsTrackable(info *containers.ContainerInfo) bool {
 	return false
 }
 
+var _ pipeline.Filter = &Filter{}
+
 func New(registry *containers.Registry, TrackingLabel string) *Filter {
 	return &Filter{
 		TrackingLabel: TrackingLabel,

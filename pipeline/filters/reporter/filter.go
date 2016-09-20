@@ -34,6 +34,8 @@ func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 	return nil
 }
 
+var _ pipeline.Filter = &Filter{}
+
 func New(reporting reporting.Driver) *Filter {
 	return &Filter{
 		reporting: reporting,

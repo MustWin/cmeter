@@ -1,11 +1,14 @@
 package nothandled
 
 import (
-	"github.com/MustWin/cmeter/context"
+	"errors"
+
 	"github.com/MustWin/cmeter/pipeline"
 )
 
 const NAME = "not_handled"
+
+var ErrNotHandled = errors.New("message not handled")
 
 type Filter struct{}
 
@@ -14,11 +17,11 @@ func (filter *Filter) Name() string {
 }
 
 func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
-	context.GetLogger(ctx).Warn("message not handled")
-	ctx.Stop()
-	return nil
+	return ErrNotHandled
 }
 
-func New() pipeline.Filter {
+var _ pipeline.Filter = &Filter{}
+
+func New() *Filter {
 	return &Filter{}
 }

@@ -3,6 +3,9 @@ package agent
 import (
 	"fmt"
 	"sync"
+	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/MustWin/cmeter/collector"
 	"github.com/MustWin/cmeter/configuration"
@@ -95,7 +98,13 @@ func (agent *Agent) ProcessSamples(wg sync.WaitGroup) {
 }
 
 func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
-	context.GetLogger(ctx).Info("initializing agent")
+	ctx, err := configureLogging(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("error configuring logging: %v", err)
+	}
+
+	log := context.GetLogger(ctx)
+	log.Info("initializing agent")
 
 	registry := containers.NewRegistry()
 	collector := collector.New(config.Collector)
@@ -120,7 +129,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		return nil, err
 	}
 
-	log := context.GetLogger(ctx)
+	log.Infof("using %q logging formatter", config.Log.Formatter)
 	log.Infof("using %q containers driver", config.Containers.Type())
 	log.Infof("using %q reporting driver", config.Reporting.Type())
 	log.Infof("tracking %q label", config.Tracking.TrackingLabel)
@@ -145,4 +154,52 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		registry:   registry,
 		reporting:  reportingDriver,
 	}, nil
+}
+
+func configureLogging(ctx context.Context, config *configuration.Config) (context.Context, error) {
+	log.SetLevel(logLevel(config.Log.Level))
+	formatter := config.Log.Formatter
+	if formatter == "" {
+		formatter = "text"
+	}
+
+	switch formatter {
+	case "json":
+		log.SetFormatter(&log.JSONFormatter{
+			TimestampFormat: time.RFC3339Nano,
+		})
+
+	case "text":
+		log.SetFormatter(&log.TextFormatter{
+			TimestampFormat: time.RFC3339Nano,
+		})
+
+	default:
+		if config.Log.Formatter != "" {
+			return ctx, fmt.Errorf("unsupported log formatter: %q", config.Log.Formatter)
+		}
+	}
+
+	if len(config.Log.Fields) > 0 {
+		var fields []interface{}
+		for k := range config.Log.Fields {
+			fields = append(fields, k)
+		}
+
+		ctx = context.WithValues(ctx, config.Log.Fields)
+		ctx = context.WithLogger(ctx, context.GetLogger(ctx, fields...))
+	}
+
+	ctx = context.WithLogger(ctx, context.GetLogger(ctx))
+	return ctx, nil
+}
+
+func logLevel(level configuration.LogLevel) log.Level {
+	l, err := log.ParseLevel(string(level))
+	if err != nil {
+		l = log.InfoLevel
+		log.Warnf("error parsing level %q: %v, using %q", level, err, l)
+	}
+
+	return l
 }

@@ -8,16 +8,16 @@ import (
 
 const NAME = "container_resolver"
 
-type filter struct {
+type Filter struct {
 	containers containers.Driver
 	registry   *containers.Registry
 }
 
-func (filter *filter) Name() string {
+func (filter *Filter) Name() string {
 	return NAME
 }
 
-func (filter *filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
+func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
 	switch m.Type() {
 	case statechange.TYPE:
 		details := m.Body().(*statechange.Details)
@@ -45,8 +45,10 @@ func (filter *filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 	return nil
 }
 
-func New(driver containers.Driver, registry *containers.Registry) pipeline.Filter {
-	return &filter{
+var _ pipeline.Filter = &Filter{}
+
+func New(driver containers.Driver, registry *containers.Registry) *Filter {
+	return &Filter{
 		containers: driver,
 		registry:   registry,
 	}

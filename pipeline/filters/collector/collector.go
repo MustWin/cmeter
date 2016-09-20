@@ -10,16 +10,16 @@ import (
 
 const NAME = "sample_collector"
 
-type filter struct {
+type Filter struct {
 	containers containers.Driver
 	collector  *collector.Collector
 }
 
-func (filter *filter) Name() string {
+func (filter *Filter) Name() string {
 	return NAME
 }
 
-func (filter *filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
+func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
 	var container *containers.ContainerInfo
 	drop := false
 
@@ -51,8 +51,10 @@ func (filter *filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 	return err
 }
 
-func New(driver containers.Driver, collector *collector.Collector) pipeline.Filter {
-	return &filter{
+var _ pipeline.Filter = &Filter{}
+
+func New(driver containers.Driver, collector *collector.Collector) *Filter {
+	return &Filter{
 		containers: driver,
 		collector:  collector,
 	}

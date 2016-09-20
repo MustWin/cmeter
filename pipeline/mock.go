@@ -8,6 +8,8 @@ type MockPipeline struct {
 	SendFunc func(ctx context.Context, m Message)
 }
 
+var _ Pipeline = &MockPipeline{}
+
 func (pipe *MockPipeline) Send(ctx context.Context, m Message) {
 	if pipe.SendFunc != nil {
 		pipe.Send(ctx, m)

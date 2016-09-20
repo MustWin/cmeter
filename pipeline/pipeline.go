@@ -6,22 +6,54 @@ import (
 	"github.com/MustWin/cmeter/context"
 )
 
-type Context struct {
+var ErrCtxNoPipeline = errors.New("no pipeline associated with this context")
+
+func getPipelineContext(ctx context.Context) (*context, error) {
+	if pctx, ok := ctx.Value("pipeline.ctx").(*context); ok {
+		return pctx
+	}
+
+	return ErrCtxNoPipeline
+}
+
+func StopProcessing(ctx context.Context) error {
+	pctx, err := getPipelineContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	pctx.stopped = true
+	return nil
+}
+
+type context struct {
 	context.Context
 	stopped         bool
 	messageOverride Message
-	Pipeline        Pipeline
+	pipeline        Pipeline
 }
 
-func (ctx *Context) SetMessage(m Message) {
+func (ctx *context) Value(key interface{}) interface{} {
+	switch key {
+	case "pipeline":
+		return ctx.Pipeline
+
+	case "pipeline.ctx":
+		return ctx
+	}
+
+	if value, ok := ctx.Value(key).(string); ok {
+		return value
+	}
+
+	return ctx.Context.Value(key)
+}
+
+func (ctx *context) SetMessage(m Message) {
 	ctx.messageOverride = m
 }
 
-func (ctx *Context) Stop() {
-	ctx.stopped = true
-}
-
-func (ctx *Context) Stopped() bool {
+func (ctx *context) Stopped() bool {
 	return ctx.stopped
 }
 

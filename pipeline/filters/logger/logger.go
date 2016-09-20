@@ -18,6 +18,8 @@ func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 	return nil
 }
 
-func New() pipeline.Filter {
+var _ pipeline.Filter = &Filter{}
+
+func New() *Filter {
 	return &Filter{}
 }

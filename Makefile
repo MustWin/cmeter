@@ -20,3 +20,6 @@ dist:
 
 image:
 	docker build -t $(DOCKER_REPO):BUILD_VERSION .
+
+test:
+	go test -v ./...

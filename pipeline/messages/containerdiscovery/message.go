@@ -3,18 +3,14 @@ package containerdiscovery
 import (
 	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/pipeline"
-	"github.com/MustWin/cmeter/shared/uuid"
+	"github.com/MustWin/cmeter/pipeline/messages/base"
 )
 
 const TYPE = "container_discovery"
 
 type Message struct {
-	id        string
+	*base.Message
 	Container *containers.ContainerInfo
-}
-
-func (msg *Message) ID() string {
-	return msg.id
 }
 
 func (msg *Message) Type() string {
@@ -25,9 +21,11 @@ func (msg *Message) Body() interface{} {
 	return msg.Container
 }
 
-func NewMessage(container *containers.ContainerInfo) pipeline.Message {
+var _ pipeline.Message = &Message{}
+
+func NewMessage(container *containers.ContainerInfo) *Message {
 	return &Message{
-		id:        uuid.Generate(),
+		Message:   &base.Message{},
 		Container: container,
 	}
 }

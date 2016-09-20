@@ -5,7 +5,7 @@ import (
 
 	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/pipeline"
-	"github.com/MustWin/cmeter/shared/uuid"
+	"github.com/MustWin/cmeter/pipeline/messages/base"
 )
 
 const TYPE = "state_change"
@@ -18,12 +18,8 @@ type Details struct {
 }
 
 type Message struct {
-	id      string
+	*base.Message
 	Details *Details
-}
-
-func (msg *Message) ID() string {
-	return msg.id
 }
 
 func (msg *Message) Type() string {
@@ -34,7 +30,9 @@ func (msg *Message) Body() interface{} {
 	return msg.Details
 }
 
-func NewMessage(event *containers.Event) pipeline.Message {
+var _ pipeline.Message = &Message{}
+
+func NewMessage(event *containers.Event) *Message {
 	details := &Details{
 		ContainerName: event.ContainerName,
 		Timestamp:     event.Timestamp,
@@ -50,7 +48,7 @@ func NewMessage(event *containers.Event) pipeline.Message {
 	}
 
 	return &Message{
-		id:      uuid.Generate(),
+		Message: &base.Message{},
 		Details: details,
 	}
 }

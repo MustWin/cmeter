@@ -3,18 +3,14 @@ package containersample
 import (
 	"github.com/MustWin/cmeter/collector"
 	"github.com/MustWin/cmeter/pipeline"
-	"github.com/MustWin/cmeter/shared/uuid"
+	"github.com/MustWin/cmeter/pipeline/messages/base"
 )
 
 const TYPE = "container_sample"
 
 type Message struct {
-	id     string
+	*base.Message
 	Sample *collector.Sample
-}
-
-func (msg *Message) ID() string {
-	return msg.id
 }
 
 func (msg *Message) Type() string {
@@ -25,9 +21,11 @@ func (msg *Message) Body() interface{} {
 	return msg.Sample
 }
 
-func NewMessage(sample *collector.Sample) pipeline.Message {
+var _ pipeline.Message = &Message{}
+
+func NewMessage(sample *collector.Sample) *Message {
 	return &Message{
-		id:     uuid.Generate(),
-		Sample: sample,
+		Message: &base.Message{},
+		Sample:  sample,
 	}
 }
