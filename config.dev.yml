@@ -10,8 +10,8 @@ tracking:
 collector:
   rate: 1800
 
-reporting: 
-  mock: true
+reporting: 'mock'
+#reporting:
 #  cmeterapi:
 #    addr: 'localhost:9090'
 #  http:
@@ -22,5 +22,4 @@ reporting:
 #      x-user-header-1: 'foo'
 #      x-user-header-2: 'boo'
 
-containers:
-  embedded: true
+containers: 'embedded'
