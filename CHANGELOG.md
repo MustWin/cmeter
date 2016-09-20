@@ -4,7 +4,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- `http` reporting driver for generic http reporting
+- `http` reporting driver for generic http reporting.
 
 ### Removed
 - the `api` command.

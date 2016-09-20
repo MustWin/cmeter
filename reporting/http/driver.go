@@ -16,8 +16,7 @@ import (
 )
 
 const (
-	CLIENT_USER_AGENT = "cmeter-http-reporter"
-
+	CLIENT_USER_AGENT     = "cmeter-http-reporter"
 	CLIENT_VERSION_HEADER = "X-CMETER-VERSION"
 
 	DEFAULT_RECEIPT_HEADER = "X-CMETER-RECEIPT"
@@ -25,8 +24,8 @@ const (
 
 var (
 	ErrInvalidEndpoint = errors.New("invalid endpoint url")
-
-	ErrInvalidReceipt = errors.New("received an invalid or empty receipt")
+	ErrInvalidReceipt  = errors.New("received an invalid or empty receipt")
+	ErrInvalidHeaders  = errors.New("error reading additional header configuration")
 )
 
 type driverFactory struct{}
@@ -53,10 +52,18 @@ func (factory *driverFactory) Create(parameters map[string]interface{}) (reporti
 		receiptHeader = DEFAULT_RECEIPT_HEADER
 	}
 
+	headers, ok := parameters["headers"].(http.Header)
+	if !ok {
+		return nil, ErrInvalidHeaders
+	}
+
 	return &Driver{
-		Endpoint:      endpointUrl,
-		Method:        httpMethod,
-		ReceiptHeader: receiptHeader,
+		Endpoint:       endpointUrl,
+		Method:         httpMethod,
+		ReceiptHeader:  receiptHeader,
+		IdentityHeader: identityHeader,
+		IdentityLabel:  identityLabel,
+		ExtraHeaders:   headers,
 	}, nil
 }
 
@@ -68,6 +75,7 @@ type Driver struct {
 	Endpoint      string
 	Method        string
 	ReceiptHeader string
+	ExtraHeaders  http.Header
 }
 
 func (d *Driver) Report(ctx context.Context, e *reporting.Event) (reporting.Receipt, error) {
@@ -87,6 +95,11 @@ func (d *Driver) Report(ctx context.Context, e *reporting.Event) (reporting.Rece
 	version := context.GetVersion(ctx)
 	r.Header.Add("User-Agent", fmt.Sprintf("%s/%s", CLIENT_USER_AGENT, version))
 	r.Header.Add(CLIENT_VERSION_HEADER, version)
+	for hn, hvs := range d.ExtraHeaders {
+		for _, v := range hvs {
+			r.Header.Add(hn, v)
+		}
+	}
 
 	client := http.DefaultClient
 	resp, err := client.Do(r)
