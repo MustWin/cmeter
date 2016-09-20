@@ -58,12 +58,10 @@ func (factory *driverFactory) Create(parameters map[string]interface{}) (reporti
 	}
 
 	return &Driver{
-		Endpoint:       endpointUrl,
-		Method:         httpMethod,
-		ReceiptHeader:  receiptHeader,
-		IdentityHeader: identityHeader,
-		IdentityLabel:  identityLabel,
-		ExtraHeaders:   headers,
+		Endpoint:      endpointUrl,
+		Method:        httpMethod,
+		ReceiptHeader: receiptHeader,
+		ExtraHeaders:  headers,
 	}, nil
 }
 
