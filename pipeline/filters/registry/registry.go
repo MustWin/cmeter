@@ -19,12 +19,12 @@ func (filter *Filter) Name() string {
 	return NAME
 }
 
-func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
+func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) error {
 	switch m.Type() {
 	case containerdiscovery.TYPE:
 		container := m.Body().(*containers.ContainerInfo)
 		if !filter.IsTrackable(container) {
-			ctx.Stop()
+			pipeline.StopProcessing(ctx)
 		} else if err := filter.registry.Register(ctx, container); err != nil {
 			context.GetLogger(ctx).Errorf("error registering container: %v", err)
 		}
@@ -32,11 +32,11 @@ func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 	case statechange.TYPE:
 		details := m.Body().(*statechange.Details)
 		if details.State == containers.StateRunning {
-			ctx.Pipeline.Send(ctx, containerdiscovery.NewMessage(details.Container))
+			pipeline.SetMessage(ctx, containerdiscovery.NewMessage(details.Container))
 		}
 
 		if !filter.registry.IsRegistered(details.ContainerName) {
-			ctx.Stop()
+			pipeline.StopProcessing(ctx)
 		} else if details.State == containers.StateStopped {
 			if err := filter.registry.Drop(ctx, details.ContainerName); err != nil {
 				context.GetLogger(ctx).Errorf("error dropping container: %v", err)

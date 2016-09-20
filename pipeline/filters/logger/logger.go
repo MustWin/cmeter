@@ -13,7 +13,7 @@ func (filter *Filter) Name() string {
 	return NAME
 }
 
-func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
+func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) error {
 	context.GetLogger(ctx).Debugf("processing %q message", m.Type())
 	return nil
 }

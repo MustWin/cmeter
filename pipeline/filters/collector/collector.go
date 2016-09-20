@@ -3,6 +3,7 @@ package collector
 import (
 	"github.com/MustWin/cmeter/collector"
 	"github.com/MustWin/cmeter/containers"
+	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
 	"github.com/MustWin/cmeter/pipeline/messages/containerdiscovery"
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
@@ -19,7 +20,7 @@ func (filter *Filter) Name() string {
 	return NAME
 }
 
-func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
+func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) error {
 	var container *containers.ContainerInfo
 	drop := false
 

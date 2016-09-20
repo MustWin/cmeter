@@ -3,6 +3,7 @@ package nothandled
 import (
 	"errors"
 
+	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
 )
 
@@ -16,7 +17,7 @@ func (filter *Filter) Name() string {
 	return NAME
 }
 
-func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
+func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) error {
 	return ErrNotHandled
 }
 

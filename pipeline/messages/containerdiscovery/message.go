@@ -3,13 +3,11 @@ package containerdiscovery
 import (
 	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/pipeline"
-	"github.com/MustWin/cmeter/pipeline/messages/base"
 )
 
 const TYPE = "container_discovery"
 
 type Message struct {
-	*base.Message
 	Container *containers.ContainerInfo
 }
 
@@ -25,7 +23,6 @@ var _ pipeline.Message = &Message{}
 
 func NewMessage(container *containers.ContainerInfo) *Message {
 	return &Message{
-		Message:   &base.Message{},
 		Container: container,
 	}
 }

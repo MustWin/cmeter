@@ -3,6 +3,7 @@ package uplink
 import (
 	"fmt"
 
+	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
 	"github.com/MustWin/cmeter/pipeline/messages/reportevent"
 	"github.com/MustWin/cmeter/reporting"
@@ -18,7 +19,7 @@ func (filter *Filter) Name() string {
 	return NAME
 }
 
-func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) error {
+func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) error {
 	switch m.Type() {
 	case reportevent.TYPE:
 		event := m.Body().(*reporting.Event)
@@ -28,7 +29,7 @@ func (filter *Filter) HandleMessage(ctx *pipeline.Context, m pipeline.Message) e
 		}
 
 		fmt.Errorf("report receipt: %s", receipt)
-		ctx.Stop()
+		pipeline.StopProcessing(ctx)
 	}
 
 	return nil

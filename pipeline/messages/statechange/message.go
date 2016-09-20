@@ -5,7 +5,6 @@ import (
 
 	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/pipeline"
-	"github.com/MustWin/cmeter/pipeline/messages/base"
 )
 
 const TYPE = "state_change"
@@ -18,7 +17,6 @@ type Details struct {
 }
 
 type Message struct {
-	*base.Message
 	Details *Details
 }
 
@@ -48,7 +46,6 @@ func NewMessage(event *containers.Event) *Message {
 	}
 
 	return &Message{
-		Message: &base.Message{},
 		Details: details,
 	}
 }
