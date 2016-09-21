@@ -6,11 +6,6 @@ import (
 	"github.com/MustWin/cmeter/context"
 )
 
-type Message interface {
-	Type() string
-	Body() interface{}
-}
-
 type Pipeline interface {
 	Send(ctx context.Context, m Message)
 }
@@ -68,20 +63,4 @@ func (pipe *simplePipe) Send(ctx context.Context, m Message) {
 
 func New(filters ...Filter) Pipeline {
 	return &simplePipe{filters: filters}
-}
-
-type devnullMessage struct{}
-
-func (msg *devnullMessage) Type() string {
-	return "devnull"
-}
-
-func (msg *devnullMessage) Body() interface{} {
-	return nil
-}
-
-var _ Message = &devnullMessage{}
-
-func NewNullMessage() Message {
-	return &devnullMessage{}
 }
