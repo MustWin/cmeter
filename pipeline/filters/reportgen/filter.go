@@ -1,11 +1,9 @@
-package uplink
+package reportgen
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/MustWin/cmeter/collector"
-	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
 	"github.com/MustWin/cmeter/pipeline/messages/containersample"
@@ -28,7 +26,7 @@ func (filter *Filter) Name() string {
 }
 
 func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) error {
-	var r reporting.Event
+	var r *reporting.Event
 	switch m.Type() {
 	case containersample.TYPE:
 		r = &reporting.Event{}

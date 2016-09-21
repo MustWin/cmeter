@@ -23,23 +23,6 @@ var _ pipeline.Message = &Message{}
 
 func NewMessage(change *containers.StateChange) *Message {
 	return &Message{
-		body: bod
-	}
-	body := &containers.StateChange{
-		Source:    event,
-		Container: nil,
-	}
-
-	switch event.Type {
-	case containers.EventContainerCreation:
-		body.State = containers.StateRunning
-	case containers.EventContainerDeletion:
-		body.State = containers.StateStopped
-	default:
-		body.State = containers.StateUnknown
-	}
-
-	return &Message{
-		body: body,
+		body: change,
 	}
 }

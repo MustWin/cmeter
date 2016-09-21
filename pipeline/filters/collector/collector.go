@@ -29,9 +29,9 @@ func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) err
 		container = m.Body().(*containers.ContainerInfo)
 
 	case statechange.TYPE:
-		details := m.Body().(*statechange.Details)
-		container = details.Container
-		if details.State != containers.StateRunning {
+		change := m.Body().(*containers.StateChange)
+		container = change.Container
+		if change.State != containers.StateRunning {
 			drop = true
 		}
 	}

@@ -1,6 +1,8 @@
 package registry
 
 import (
+	"fmt"
+
 	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
@@ -25,23 +27,17 @@ func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) err
 		container := m.Body().(*containers.ContainerInfo)
 		if filter.IsTrackable(container) {
 			if err := filter.registry.Register(ctx, container); err != nil {
-				context.GetLogger(ctx).Errorf("error registering container: %v", err)
+				return fmt.Errorf("error registering container: %v", err)
 			}
 		}
 
-		return pipeline.StopProcessing(ctx)
-
 	case statechange.TYPE:
-		details := m.Body().(*statechange.Details)
-		if details.State == containers.StateRunning {
-			pipeline.SetMessage(ctx, containerdiscovery.NewMessage(details.Container))
-		}
-
-		if !filter.registry.IsRegistered(details.ContainerName) {
-			pipeline.StopProcessing(ctx)
-		} else if details.State == containers.StateStopped {
-			if err := filter.registry.Drop(ctx, details.ContainerName); err != nil {
-				context.GetLogger(ctx).Errorf("error dropping container: %v", err)
+		change := m.Body().(*containers.StateChange)
+		if !filter.registry.IsRegistered(change.Container.Name) {
+			return pipeline.StopProcessing(ctx)
+		} else if change.State == containers.StateStopped {
+			if err := filter.registry.Drop(ctx, change.Container.Name); err != nil {
+				return fmt.Errorf("error dropping container: %v", err)
 			}
 		}
 	}

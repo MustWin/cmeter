@@ -17,8 +17,8 @@ import (
 	logFilter "github.com/MustWin/cmeter/pipeline/filters/logger"
 	notHandledFilter "github.com/MustWin/cmeter/pipeline/filters/nothandled"
 	registryFilter "github.com/MustWin/cmeter/pipeline/filters/registry"
+	reporterFilter "github.com/MustWin/cmeter/pipeline/filters/reporter"
 	reportGeneratorFilter "github.com/MustWin/cmeter/pipeline/filters/reportgen"
-	resolveContainerFilter "github.com/MustWin/cmeter/pipeline/filters/resolvecontainer"
 	"github.com/MustWin/cmeter/pipeline/messages/containerdiscovery"
 	"github.com/MustWin/cmeter/pipeline/messages/containersample"
 	"github.com/MustWin/cmeter/pipeline/messages/statechange"
@@ -83,7 +83,30 @@ func (agent *Agent) ProcessEvents(wg sync.WaitGroup) {
 	context.GetLogger(agent).Info("event monitor started")
 	defer context.GetLogger(agent).Info("event monitor stopped")
 	for event := range eventChan.GetChannel() {
-		m := statechange.NewMessage(event)
+		var c *containers.ContainerInfo
+
+		if cc, found := agent.registry.Get(event.ContainerName); found {
+			c = cc
+		} else {
+			c, err = agent.containers.GetContainer(agent, event.ContainerName)
+			if err != nil {
+				if err == containers.ErrContainerNotFound {
+					context.GetLogger(agent).Warnf("event container info for %q not available", event.ContainerName)
+				} else {
+					context.GetLogger(agent).Errorf("error getting event container info: %v", err)
+				}
+
+				continue
+			}
+		}
+
+		change := &containers.StateChange{
+			State:     containers.StateFromEvent(event.Type),
+			Source:    event,
+			Container: c,
+		}
+
+		m := statechange.NewMessage(change)
 		go agent.pipeline.Send(agent, m)
 	}
 }
@@ -136,11 +159,10 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 
 	filters := []pipeline.Filter{
 		logFilter.New(),
-		resolveContainerFilter.New(containersDriver, registry),
 		registryFilter.New(registry, config.Tracking.TrackingLabel),
 		sampleCollectionFilter.New(containersDriver, collector),
 		reportGeneratorFilter.New(),
-		reportingFilter.New(reportingDriver),
+		reporterFilter.New(reportingDriver),
 		notHandledFilter.New(),
 	}
 
