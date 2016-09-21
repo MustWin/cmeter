@@ -2,6 +2,7 @@ package registry
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/context"
@@ -29,6 +30,15 @@ func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) err
 			if err := filter.registry.Register(ctx, container); err != nil {
 				return fmt.Errorf("error registering container: %v", err)
 			}
+
+			return pipeline.SetMessage(ctx, statechange.NewMessage(&containers.StateChange{
+				State: containers.StateRunning,
+				Source: &containers.Event{
+					Type:      containers.EventContainerExisted,
+					Timestamp: time.Now().Unix(),
+				},
+				Container: container,
+			}))
 		}
 
 	case statechange.TYPE:

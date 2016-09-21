@@ -1,8 +1,6 @@
 package containers
 
 import (
-	"time"
-
 	"github.com/MustWin/cmeter/context"
 )
 
@@ -13,6 +11,7 @@ const (
 	EventContainerDeletion EventType = "containerDeletion"
 	EventContainerOom      EventType = "oom"
 	EventContainerOomKill  EventType = "oomKill"
+	EventContainerExisted  EventType = "containerExisted"
 )
 
 type State string
@@ -43,7 +42,7 @@ type StateChange struct {
 type Event struct {
 	Type          EventType `json:"type"`
 	ContainerName string    `json:""`
-	Timestamp     time.Time `json:"timestamp"`
+	Timestamp     int64     `json:"timestamp"`
 }
 
 type EventsChannel interface {
