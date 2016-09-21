@@ -51,8 +51,8 @@ type EventsChannel interface {
 }
 
 type ContainerInfo struct {
-	Name   string
-	Labels map[string]string
+	Name   string            `json:"name"`
+	Labels map[string]string `json:"labels"`
 }
 
 type Stats struct {
