@@ -1,23 +1,14 @@
 package statechange
 
 import (
-	"time"
-
 	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/pipeline"
 )
 
 const TYPE = "state_change"
 
-type Details struct {
-	ContainerName string
-	Container     *containers.ContainerInfo
-	State         containers.State
-	Timestamp     time.Time
-}
-
 type Message struct {
-	Details *Details
+	body *containers.StateChange
 }
 
 func (msg *Message) Type() string {
@@ -25,27 +16,30 @@ func (msg *Message) Type() string {
 }
 
 func (msg *Message) Body() interface{} {
-	return msg.Details
+	return msg.body
 }
 
 var _ pipeline.Message = &Message{}
 
-func NewMessage(event *containers.Event) *Message {
-	details := &Details{
-		ContainerName: event.ContainerName,
-		Timestamp:     event.Timestamp,
+func NewMessage(change *containers.StateChange) *Message {
+	return &Message{
+		body: bod
+	}
+	body := &containers.StateChange{
+		Source:    event,
+		Container: nil,
 	}
 
 	switch event.Type {
 	case containers.EventContainerCreation:
-		details.State = containers.StateRunning
+		body.State = containers.StateRunning
 	case containers.EventContainerDeletion:
-		details.State = containers.StateStopped
+		body.State = containers.StateStopped
 	default:
-		details.State = containers.StateUnknown
+		body.State = containers.StateUnknown
 	}
 
 	return &Message{
-		Details: details,
+		body: body,
 	}
 }

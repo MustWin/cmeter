@@ -59,6 +59,10 @@ func (pipe *simplePipe) Send(ctx context.Context, m Message) {
 
 		m, _ = GetMessage(ctx)
 	}
+
+	if IsProcessing(ctx) {
+		StopProcessing(ctx)
+	}
 }
 
 func New(filters ...Filter) Pipeline {

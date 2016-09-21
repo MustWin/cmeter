@@ -19,3 +19,7 @@ func Since(ctx Context, key interface{}) time.Duration {
 
 	return 0
 }
+
+func GetInstanceID(ctx Context) string {
+	return GetStringValue(ctx, "instance.id")
+}

@@ -26,10 +26,10 @@ type Collector struct {
 }
 
 type Sample struct {
-	Timestamp int64
-	FrameSize time.Duration
-	Container *containers.ContainerInfo
-	Stats     *containers.Stats
+	Timestamp int64                     `json:"timestamp"`
+	FrameSize time.Duration             `json:"rate"`
+	Container *containers.ContainerInfo `json:"container"`
+	Stats     *containers.Stats         `json:"stats"`
 }
 
 func (c *Collector) Collect(ctx context.Context, ch containers.StatsChannel) error {

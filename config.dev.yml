@@ -3,6 +3,9 @@ version: 0.1
 logging:
   level: 'debug'
   formatter: 'text'
+#  fields:
+#    customfield1: 'value'
+
 
 tracking:
   tracking_label: 'com.example.track'

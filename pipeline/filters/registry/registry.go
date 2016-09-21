@@ -23,11 +23,13 @@ func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) err
 	switch m.Type() {
 	case containerdiscovery.TYPE:
 		container := m.Body().(*containers.ContainerInfo)
-		if !filter.IsTrackable(container) {
-			pipeline.StopProcessing(ctx)
-		} else if err := filter.registry.Register(ctx, container); err != nil {
-			context.GetLogger(ctx).Errorf("error registering container: %v", err)
+		if filter.IsTrackable(container) {
+			if err := filter.registry.Register(ctx, container); err != nil {
+				context.GetLogger(ctx).Errorf("error registering container: %v", err)
+			}
 		}
+
+		return pipeline.StopProcessing(ctx)
 
 	case statechange.TYPE:
 		details := m.Body().(*statechange.Details)
