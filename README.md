@@ -48,6 +48,9 @@ logging:
   level: 'debug'
   # log output format: `text` or `json`
   formatter: 'text'
+  # custom fields to be added and displayed in the log
+  fields:
+    customfield1: 'value'
 
 # container tracking stuff
 tracking:

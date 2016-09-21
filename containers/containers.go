@@ -23,11 +23,27 @@ const (
 	StateUnknown State = "unknown"
 )
 
+func StateFromEvent(eventType EventType) State {
+	switch eventType {
+	case EventContainerCreation:
+		return StateRunning
+	case EventContainerDeletion:
+		return StateStopped
+	}
+
+	return StateUnknown
+}
+
+type StateChange struct {
+	State     State          `json:"state"`
+	Source    *Event         `json:"source_event"`
+	Container *ContainerInfo `json:"container"`
+}
+
 type Event struct {
-	Type          EventType
-	ContainerName string
-	ServiceKey    string
-	Timestamp     time.Time
+	Type          EventType `json:"type"`
+	ContainerName string    `json:""`
+	Timestamp     time.Time `json:"timestamp"`
 }
 
 type EventsChannel interface {

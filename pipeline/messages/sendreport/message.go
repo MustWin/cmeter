@@ -1,11 +1,11 @@
-package reportevent
+package sendreport
 
 import (
 	"github.com/MustWin/cmeter/pipeline"
 	"github.com/MustWin/cmeter/reporting"
 )
 
-const TYPE = "report_event"
+const TYPE = "send_report"
 
 type Message struct {
 	Event *reporting.Event

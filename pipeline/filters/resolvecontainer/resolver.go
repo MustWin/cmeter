@@ -1,6 +1,8 @@
 package resolvecontainer
 
 import (
+	"time"
+
 	"github.com/MustWin/cmeter/containers"
 	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/pipeline"
@@ -25,6 +27,7 @@ func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) err
 		if details.Container == nil {
 			switch details.State {
 			case containers.StateRunning:
+				time.Sleep(time.Millisecond * 5000)
 				info, err := filter.containers.GetContainer(ctx, details.ContainerName)
 				if err != nil {
 					if err == containers.ErrContainerNotFound {

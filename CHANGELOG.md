@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - `dist` Makefile target, for use with the docker image build.
 - `http` reporting driver for generic http reporting.
 - first test!
+- `logging.fields` configuration value support to add custom log fields
 
 ### Removed
 - the `api` command.
