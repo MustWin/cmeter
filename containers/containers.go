@@ -40,9 +40,9 @@ type StateChange struct {
 }
 
 type Event struct {
-	Type          EventType `json:"type"`
-	ContainerName string    `json:""`
-	Timestamp     int64     `json:"timestamp"`
+	Type      EventType           `json:"type"`
+	Container *ContainerReference `json:""`
+	Timestamp int64               `json:"timestamp"`
 }
 
 type EventsChannel interface {
@@ -51,8 +51,12 @@ type EventsChannel interface {
 }
 
 type ContainerInfo struct {
-	Name   string            `json:"name"`
+	*ContainerReference
 	Labels map[string]string `json:"labels"`
+}
+
+type ContainerReference struct {
+	Name string `json:"name"`
 }
 
 type Stats struct {
@@ -68,6 +72,6 @@ type Driver interface {
 	WatchEvents(ctx context.Context, types ...EventType) (EventsChannel, error)
 	GetContainers(ctx context.Context) ([]*ContainerInfo, error)
 	GetContainer(ctx context.Context, name string) (*ContainerInfo, error)
-	GetContainerStats(ctx context.Context, container *ContainerInfo) (StatsChannel, error)
+	GetContainerStats(ctx context.Context, container *ContainerReference) (StatsChannel, error)
 	CloseAllChannels(ctx context.Context) error
 }

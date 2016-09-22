@@ -11,6 +11,7 @@ import (
 	cadvisorMetrics "github.com/google/cadvisor/container"
 	"github.com/google/cadvisor/events"
 	"github.com/google/cadvisor/info/v1"
+	"github.com/google/cadvisor/info/v2"
 	"github.com/google/cadvisor/manager"
 	"github.com/google/cadvisor/utils/sysfs"
 
@@ -24,7 +25,7 @@ var parseOnce sync.Once
 const (
 	statsCacheDuration          = 2 * time.Minute
 	maxHousekeepingInterval     = 15 * time.Second
-	defaultHousekeepingInterval = 10 * time.Second
+	defaultHousekeepingInterval = 5 * time.Second
 	allowDynamicHousekeeping    = true
 )
 
@@ -103,7 +104,9 @@ func (d *driver) WatchEvents(ctx context.Context, types ...containers.EventType)
 
 func convertContainerInfo(info v1.ContainerInfo) *containers.ContainerInfo {
 	return &containers.ContainerInfo{
-		Name:   info.Name,
+		ContainerReference: &containers.ContainerReference{
+			Name: info.Name,
+		},
 		Labels: info.Labels,
 	}
 }
@@ -124,12 +127,18 @@ func (d *driver) GetContainers(ctx context.Context) ([]*containers.ContainerInfo
 }
 
 func (d *driver) GetContainer(ctx context.Context, name string) (*containers.ContainerInfo, error) {
-	if !d.manager.Exists(name) {
+	/*if !d.manager.Exists(name) {
 		return nil, containers.ErrContainerNotFound
-	}
+	}*/
 
 	r := &v1.ContainerInfoRequest{NumStats: 0}
-	info, err := d.manager.GetContainerInfo(name, r)
+	//info, err := d.manager.GetContainerInfo(name, r)
+	specMap, err := d.manager.GetContainerSpec(name, v2.RequestOptions{
+		IdType:    "name",
+		Count:     0,
+		Recursive: false,
+	})
+
 	if err != nil {
 		if strings.Contains(err.Error(), "unable to find data for container") {
 			return nil, containers.ErrContainerNotFound
@@ -141,9 +150,10 @@ func (d *driver) GetContainer(ctx context.Context, name string) (*containers.Con
 	return convertContainerInfo(*info), nil
 }
 
-func (d *driver) GetContainerStats(ctx context.Context, container *containers.ContainerInfo) (containers.StatsChannel, error) {
-	if !d.manager.Exists(container.Name) {
-		return nil, containers.ErrContainerNotFound
+func (d *driver) GetContainerStats(ctx context.Context, ref *containers.ContainerReference) (containers.StatsChannel, error) {
+	container, err := d.GetContainer(ctx, ref.Name)
+	if err != nil {
+		return nil, err
 	}
 
 	return newStatsChannel(d.manager, container), nil

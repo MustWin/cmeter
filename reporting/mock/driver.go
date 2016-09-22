@@ -25,6 +25,6 @@ type Driver struct {
 func (d *Driver) Report(ctx context.Context, e *reporting.Event) (reporting.Receipt, error) {
 	d.Counter++
 	receipt := reporting.Receipt(fmt.Sprintf("event#%d", d.Counter))
-	context.GetLogger(ctx).Info("report@%d: %+#v", d.Counter, e)
+	context.GetLogger(ctx).Infof("report#%d: %+#v", d.Counter, e)
 	return reporting.Receipt(receipt), nil
 }

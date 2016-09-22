@@ -85,13 +85,13 @@ func (agent *Agent) ProcessEvents(wg sync.WaitGroup) {
 	for event := range eventChan.GetChannel() {
 		var c *containers.ContainerInfo
 
-		if cc, found := agent.registry.Get(event.ContainerName); found {
+		if cc, found := agent.registry.Get(event.Container.Name); found {
 			c = cc
 		} else {
-			c, err = agent.containers.GetContainer(agent, event.ContainerName)
+			c, err = agent.containers.GetContainer(agent, event.Container.Name)
 			if err != nil {
 				if err == containers.ErrContainerNotFound {
-					context.GetLogger(agent).Warnf("event container info for %q not available", event.ContainerName)
+					context.GetLogger(agent).Warnf("event container info for %q not available", event.Container.Name)
 				} else {
 					context.GetLogger(agent).Errorf("error getting event container info: %v", err)
 				}

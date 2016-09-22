@@ -78,8 +78,8 @@ func StopProcessing(ctx context.Context) error {
 }
 
 func IsProcessing(ctx context.Context) bool {
-	_, err := getPipelineContext(ctx)
-	if err == nil {
+	pctx, err := getPipelineContext(ctx)
+	if err == nil && !pctx.stopped {
 		return true
 	}
 

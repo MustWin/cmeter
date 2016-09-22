@@ -21,17 +21,18 @@ func (filter *Filter) Name() string {
 }
 
 func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) error {
-	var container *containers.ContainerInfo
+	var container *containers.ContainerReference
 	drop := false
 
 	switch m.Type() {
 	case containerdiscovery.TYPE:
-		container = m.Body().(*containers.ContainerInfo)
+		info := m.Body().(*containers.ContainerInfo)
+		container = info.ContainerReference
 
 	case statechange.TYPE:
 		change := m.Body().(*containers.StateChange)
-		container = change.Container
-		if change.State != containers.StateRunning {
+		container = change.Container.ContainerReference
+		if change.State == containers.StateStopped {
 			drop = true
 		}
 	}
