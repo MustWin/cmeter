@@ -102,12 +102,40 @@ func (d *driver) WatchEvents(ctx context.Context, types ...containers.EventType)
 	return newEventChannel(cec), nil
 }
 
+func parseImageData(image string) (string, string) {
+	parts := strings.Split(image, ":")
+	if len(parts) < 2 {
+		return image, "latest"
+	} else if parts[1] == "" {
+		parts[1] = "latest"
+	}
+
+	return parts[0], parts[1]
+}
+
 func convertContainerInfo(info v1.ContainerInfo) *containers.ContainerInfo {
+	imageName, imageTag := parseImageData(info.Spec.Image)
 	return &containers.ContainerInfo{
 		ContainerReference: &containers.ContainerReference{
 			Name: info.Name,
 		},
-		Labels: info.Labels,
+
+		ImageName: imageName,
+		ImageTag:  imageTag,
+		Labels:    info.Labels,
+	}
+}
+
+func convertContainerSpec(name string, spec v2.ContainerSpec) *containers.ContainerInfo {
+	imageName, imageTag := parseImageData(spec.Image)
+	return &containers.ContainerInfo{
+		ContainerReference: &containers.ContainerReference{
+			Name: name,
+		},
+
+		ImageName: imageName,
+		ImageTag:  imageTag,
+		Labels:    spec.Labels,
 	}
 }
 
@@ -131,7 +159,7 @@ func (d *driver) GetContainer(ctx context.Context, name string) (*containers.Con
 		return nil, containers.ErrContainerNotFound
 	}*/
 
-	r := &v1.ContainerInfoRequest{NumStats: 0}
+	//r := &v1.ContainerInfoRequest{NumStats: 0}
 	//info, err := d.manager.GetContainerInfo(name, r)
 	specMap, err := d.manager.GetContainerSpec(name, v2.RequestOptions{
 		IdType:    "name",
@@ -147,7 +175,7 @@ func (d *driver) GetContainer(ctx context.Context, name string) (*containers.Con
 		return nil, err
 	}
 
-	return convertContainerInfo(*info), nil
+	return convertContainerSpec(name, specMap[name]), nil
 }
 
 func (d *driver) GetContainerStats(ctx context.Context, ref *containers.ContainerReference) (containers.StatsChannel, error) {
