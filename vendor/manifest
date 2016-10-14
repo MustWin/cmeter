@@ -5,7 +5,7 @@
 			"importpath": "github.com/MustWin/ctoll/ctoll/api/client",
 			"repository": "https://github.com/MustWin/ctoll",
 			"vcs": "git",
-			"revision": "f1c494b40d6291e63377b0c4a9dd4b6e0dcde31a",
+			"revision": "4cd332ddd140d3c63362b238a46b68a1e196a636",
 			"branch": "master",
 			"path": "/ctoll/api/client",
 			"notests": true
@@ -14,7 +14,7 @@
 			"importpath": "github.com/MustWin/ctoll/ctoll/api/describe",
 			"repository": "https://github.com/MustWin/ctoll",
 			"vcs": "git",
-			"revision": "d7026db936066e10f0a2b52265a6a8cfcfe191f3",
+			"revision": "4cd332ddd140d3c63362b238a46b68a1e196a636",
 			"branch": "master",
 			"path": "ctoll/api/describe",
 			"notests": true
@@ -23,7 +23,7 @@
 			"importpath": "github.com/MustWin/ctoll/ctoll/api/errcode",
 			"repository": "https://github.com/MustWin/ctoll",
 			"vcs": "git",
-			"revision": "d7026db936066e10f0a2b52265a6a8cfcfe191f3",
+			"revision": "4cd332ddd140d3c63362b238a46b68a1e196a636",
 			"branch": "master",
 			"path": "ctoll/api/errcode",
 			"notests": true
@@ -32,7 +32,7 @@
 			"importpath": "github.com/MustWin/ctoll/ctoll/api/v1",
 			"repository": "https://github.com/MustWin/ctoll",
 			"vcs": "git",
-			"revision": "d7026db936066e10f0a2b52265a6a8cfcfe191f3",
+			"revision": "4cd332ddd140d3c63362b238a46b68a1e196a636",
 			"branch": "master",
 			"path": "ctoll/api/v1",
 			"notests": true

@@ -38,16 +38,16 @@ type APIKey struct {
 }
 
 type Usage struct {
-	TotalCPUPerc   float32 `json:"total_cpu_perc"`
-	MemoryBytes    int64   `json:"memory_bytes"`
-	DiskIOBytes    int64   `json:"disk_io_bytes"`
-	NetworkRxBytes int64   `json:"net_rx_bytes"`
-	NetworkTxBytes int64   `json:"net_tx_bytes"`
+	TotalCPUPerc   float64 `json:"total_cpu_perc"`
+	MemoryBytes    uint64  `json:"memory_bytes"`
+	DiskIOBytes    uint64  `json:"disk_io_bytes"`
+	NetworkRxBytes uint64  `json:"net_rx_bytes"`
+	NetworkTxBytes uint64  `json:"net_tx_bytes"`
 }
 
 type BlockAlloc struct {
 	MaxCPUPerc  float32 `json:"max_cpu_perc"`
-	MemoryBytes int64   `json:"memory_bytes"`
+	MemoryBytes uint64  `json:"memory_bytes"`
 }
 
 type ContainerInfo struct {
