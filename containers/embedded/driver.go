@@ -116,10 +116,7 @@ func parseImageData(image string) (string, string) {
 func convertContainerInfo(info v1.ContainerInfo) *containers.ContainerInfo {
 	imageName, imageTag := parseImageData(info.Spec.Image)
 	return &containers.ContainerInfo{
-		ContainerReference: &containers.ContainerReference{
-			Name: info.Name,
-		},
-
+		Name:      info.Name,
 		ImageName: imageName,
 		ImageTag:  imageTag,
 		Labels:    info.Labels,
@@ -129,10 +126,7 @@ func convertContainerInfo(info v1.ContainerInfo) *containers.ContainerInfo {
 func convertContainerSpec(name string, spec v2.ContainerSpec) *containers.ContainerInfo {
 	imageName, imageTag := parseImageData(spec.Image)
 	return &containers.ContainerInfo{
-		ContainerReference: &containers.ContainerReference{
-			Name: name,
-		},
-
+		Name:      name,
 		ImageName: imageName,
 		ImageTag:  imageTag,
 		Labels:    spec.Labels,
@@ -178,8 +172,8 @@ func (d *driver) GetContainer(ctx context.Context, name string) (*containers.Con
 	return convertContainerSpec(name, specMap[name]), nil
 }
 
-func (d *driver) GetContainerStats(ctx context.Context, ref *containers.ContainerReference) (containers.StatsChannel, error) {
-	container, err := d.GetContainer(ctx, ref.Name)
+func (d *driver) GetContainerStats(ctx context.Context, name string) (containers.StatsChannel, error) {
+	container, err := d.GetContainer(ctx, name)
 	if err != nil {
 		return nil, err
 	}

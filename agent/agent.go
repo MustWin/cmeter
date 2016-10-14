@@ -115,6 +115,15 @@ func (agent *Agent) ProcessSamples(wg sync.WaitGroup) {
 	defer wg.Done()
 
 	for sample := range agent.collector.GetChannel() {
+		// The sample container data is incomplete and only contains the name.
+		// We'll do a lookup and attach our known data to it
+		ci, ok := agent.registry.Get(sample.Container.Name)
+		if !ok {
+			// NOTE: If container data isn't found, skip the sample (shouldn't happen!)
+			continue
+		}
+
+		sample.Container = ci
 		m := containersample.NewMessage(sample)
 		go agent.pipeline.Send(agent, m)
 	}

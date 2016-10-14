@@ -21,17 +21,17 @@ func (filter *Filter) Name() string {
 }
 
 func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) error {
-	var container *containers.ContainerReference
+	var container *containers.ContainerInfo
 	drop := false
 
 	switch m.Type() {
 	case containerdiscovery.TYPE:
 		info := m.Body().(*containers.ContainerInfo)
-		container = info.ContainerReference
+		container = info
 
 	case statechange.TYPE:
 		change := m.Body().(*containers.StateChange)
-		container = change.Container.ContainerReference
+		container = change.Container
 		if change.State == containers.StateStopped {
 			drop = true
 		}
@@ -43,7 +43,7 @@ func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) err
 			_, err = filter.collector.Stop(ctx, container)
 		} else {
 			var ch containers.StatsChannel
-			ch, err = filter.containers.GetContainerStats(ctx, container)
+			ch, err = filter.containers.GetContainerStats(ctx, container.Name)
 			if err == nil {
 				err = filter.collector.Collect(ctx, ch)
 			}
