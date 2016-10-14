@@ -2,6 +2,42 @@
 	"version": 0,
 	"dependencies": [
 		{
+			"importpath": "github.com/MustWin/ctoll/ctoll/api/client",
+			"repository": "https://github.com/MustWin/ctoll",
+			"vcs": "git",
+			"revision": "d7026db936066e10f0a2b52265a6a8cfcfe191f3",
+			"branch": "master",
+			"path": "/ctoll/api/client",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/MustWin/ctoll/ctoll/api/describe",
+			"repository": "https://github.com/MustWin/ctoll",
+			"vcs": "git",
+			"revision": "d7026db936066e10f0a2b52265a6a8cfcfe191f3",
+			"branch": "master",
+			"path": "ctoll/api/describe",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/MustWin/ctoll/ctoll/api/errcode",
+			"repository": "https://github.com/MustWin/ctoll",
+			"vcs": "git",
+			"revision": "d7026db936066e10f0a2b52265a6a8cfcfe191f3",
+			"branch": "master",
+			"path": "ctoll/api/errcode",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/MustWin/ctoll/ctoll/api/v1",
+			"repository": "https://github.com/MustWin/ctoll",
+			"vcs": "git",
+			"revision": "d7026db936066e10f0a2b52265a6a8cfcfe191f3",
+			"branch": "master",
+			"path": "ctoll/api/v1",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/Sirupsen/logrus",
 			"repository": "https://github.com/Sirupsen/logrus",
 			"vcs": "git",
