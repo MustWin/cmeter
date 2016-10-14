@@ -26,10 +26,10 @@ type Collector struct {
 }
 
 type Sample struct {
-	Timestamp int64                          `json:"timestamp"`
-	FrameSize time.Duration                  `json:"rate"`
-	Container *containers.ContainerReference `json:"container_ref"`
-	Stats     *containers.Stats              `json:"stats"`
+	Timestamp int64                     `json:"timestamp"`
+	FrameSize time.Duration             `json:"rate"`
+	Container *containers.ContainerInfo `json:"container"`
+	Stats     *containers.Stats         `json:"stats"`
 }
 
 func (c *Collector) Collect(ctx context.Context, ch containers.StatsChannel) error {
@@ -63,14 +63,14 @@ func (c *Collector) doCollect(ctx context.Context, data *collectorData) {
 		case metrics, ok := <-data.ch.GetChannel():
 			if !ok {
 				defer context.GetLogger(ctx).Info("container stats collection completed")
-				if _, err := c.Stop(ctx, data.ch.Container().ContainerReference); err != nil {
+				if _, err := c.Stop(ctx, data.ch.Container()); err != nil {
 					context.GetLogger(ctx).Errorf("error stopping container stats collection: %v", err)
 				}
 
 				return
 			} else {
 				sample := &Sample{
-					Container: data.ch.Container().ContainerReference,
+					Container: data.ch.Container(),
 					Stats:     metrics,
 					Timestamp: time.Now().Unix(),
 					FrameSize: c.Rate,
@@ -82,7 +82,7 @@ func (c *Collector) doCollect(ctx context.Context, data *collectorData) {
 	}
 }
 
-func (c *Collector) Stop(ctx context.Context, container *containers.ContainerReference) (containers.StatsChannel, error) {
+func (c *Collector) Stop(ctx context.Context, container *containers.ContainerInfo) (containers.StatsChannel, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
