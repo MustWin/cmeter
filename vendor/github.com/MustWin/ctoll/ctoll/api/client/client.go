@@ -22,7 +22,7 @@ func New(endpoint string, apiKey string, httpClient *http.Client) *Client {
 	return &Client{
 		Endpoint:   endpoint,
 		ApiKey:     apiKey,
-		HttpClient: httpClient,
+		HTTPClient: httpClient,
 	}
 }
 
@@ -69,5 +69,5 @@ func (c *Client) do(r *http.Request) (*http.Response, error) {
 		r.Header.Add("CTOLL-API-KEY", c.ApiKey)
 	}
 
-	return c.HttpClient.Do(r)
+	return c.HTTPClient.Do(r)
 }
