@@ -12,12 +12,7 @@ import (
 	"github.com/MustWin/cmeter/reporting"
 )
 
-const (
-	NAME = "report_generator"
-
-	EVENT_SAMPLE       = "stat_sample"
-	EVENT_STATE_CHANGE = "state_change"
-)
+const NAME = "report_generator"
 
 type Filter struct{}
 
@@ -30,12 +25,12 @@ func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) err
 	switch m.Type() {
 	case containersample.TYPE:
 		r = &reporting.Event{}
-		r.Type = EVENT_SAMPLE
+		r.Type = reporting.EventSample
 		r.Data = m.Body()
 
 	case statechange.TYPE:
 		r = &reporting.Event{}
-		r.Type = EVENT_STATE_CHANGE
+		r.Type = reporting.EventStateChange
 		r.Data = m.Body()
 	}
 

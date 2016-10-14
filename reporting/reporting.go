@@ -15,6 +15,11 @@ type Event struct {
 	Data      interface{} `json:"data"`
 }
 
+var (
+	EventSample      = "stat_sample"
+	EventStateChange = "state_change"
+)
+
 type Driver interface {
 	Report(ctx context.Context, e *Event) (Receipt, error)
 }

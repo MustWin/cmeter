@@ -51,10 +51,12 @@ type EventsChannel interface {
 }
 
 type ContainerInfo struct {
-	Name      string            `json:"name"`
-	Labels    map[string]string `json:"labels"`
-	ImageName string            `json:"image_name"`
-	ImageTag  string            `json:"image_tag"`
+	Name      string             `json:"name"`
+	Labels    map[string]string  `json:"labels"`
+	ImageName string             `json:"image_name"`
+	ImageTag  string             `json:"image_tag"`
+	Machine   *MachineInfo       `json:"machine"`
+	Reserved  *ReservedResources `json:"reserved"`
 }
 
 type Driver interface {
@@ -63,4 +65,16 @@ type Driver interface {
 	GetContainer(ctx context.Context, name string) (*ContainerInfo, error)
 	GetContainerStats(ctx context.Context, name string) (StatsChannel, error)
 	CloseAllChannels(ctx context.Context) error
+}
+
+type MachineInfo struct {
+	SystemUuid      string `json:"system_uuid"`
+	Cores           int    `json:"cores"`
+	Memory          uint64 `json:"memory_byes"`
+	CpuFrequencyKhz uint64 `json:"cpu_frequency_khz"`
+}
+
+type ReservedResources struct {
+	Cpu    float64 `json:"cpu"`
+	Memory uint64  `json:"memory"`
 }

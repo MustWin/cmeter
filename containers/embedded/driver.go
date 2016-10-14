@@ -53,7 +53,13 @@ func (factory *driverFactory) Create(parameters map[string]interface{}) (contain
 		return nil, err
 	}
 
+	machine, err := m.GetMachineInfo()
+	if err != nil {
+		return nil, err
+	}
+
 	d := &driver{
+		host:    convertMachineInfo(machine),
 		manager: m,
 	}
 
@@ -86,6 +92,7 @@ func init() {
 
 type driver struct {
 	manager manager.Manager
+	host    *containers.MachineInfo
 }
 
 func (d *driver) WatchEvents(ctx context.Context, types ...containers.EventType) (containers.EventsChannel, error) {
@@ -113,6 +120,15 @@ func parseImageData(image string) (string, string) {
 	return parts[0], parts[1]
 }
 
+func convertMachineInfo(info *v1.MachineInfo) *containers.MachineInfo {
+	return &containers.MachineInfo{
+		SystemUuid:      info.SystemUUID,
+		Cores:           info.NumCores,
+		Memory:          info.MemoryCapacity,
+		CpuFrequencyKhz: info.CpuFrequency,
+	}
+}
+
 func convertContainerInfo(info v1.ContainerInfo) *containers.ContainerInfo {
 	imageName, imageTag := parseImageData(info.Spec.Image)
 	return &containers.ContainerInfo{
@@ -120,6 +136,11 @@ func convertContainerInfo(info v1.ContainerInfo) *containers.ContainerInfo {
 		ImageName: imageName,
 		ImageTag:  imageTag,
 		Labels:    info.Labels,
+		Reserved: &containers.ReservedResources{
+			// from cadvisor: cpu hard limit in milli-cpus (default 0)
+			Cpu:    float64(info.Spec.Cpu.MaxLimit) / 1000,
+			Memory: info.Spec.Memory.Limit,
+		},
 	}
 }
 

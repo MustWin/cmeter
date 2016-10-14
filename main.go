@@ -12,7 +12,7 @@ import (
 	_ "github.com/MustWin/cmeter/cmd/version"
 	_ "github.com/MustWin/cmeter/containers/embedded"
 	"github.com/MustWin/cmeter/context"
-	_ "github.com/MustWin/cmeter/reporting/cmeterapi"
+	_ "github.com/MustWin/cmeter/reporting/ctoll"
 	_ "github.com/MustWin/cmeter/reporting/http"
 	_ "github.com/MustWin/cmeter/reporting/mock"
 )
