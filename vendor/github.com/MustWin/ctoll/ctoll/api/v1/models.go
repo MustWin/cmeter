@@ -37,6 +37,13 @@ type APIKey struct {
 	OrgID string `json:"org_id"`
 }
 
+type MachineInfo struct {
+	SystemUuid      string `json:"system_uuid"`
+	Cores           int    `json:"cores"`
+	MemoryBytes     uint64 `json:"memory_bytes"`
+	CpuFrequencyKhz uint64 `json:"cpu_frequency_khz"`
+}
+
 type Usage struct {
 	TotalCPUPerc   float64 `json:"total_cpu_perc"`
 	MemoryBytes    uint64  `json:"memory_bytes"`
@@ -46,7 +53,7 @@ type Usage struct {
 }
 
 type BlockAlloc struct {
-	MaxCPUPerc  float32 `json:"max_cpu_perc"`
+	MaxCPUPerc  float64 `json:"max_cpu_perc"`
 	MemoryBytes uint64  `json:"memory_bytes"`
 }
 
@@ -55,6 +62,7 @@ type ContainerInfo struct {
 	ImageTag  string            `json:"image_tag"`
 	Name      string            `json:"name"`
 	Labels    map[string]string `json:"labels"`
+	Machine   *MachineInfo      `json:"machine"`
 }
 
 type MeterEventType string
@@ -109,6 +117,7 @@ type MeterSession struct {
 	StartTime int64        `json:"start_time"`
 	EndTime   int64        `json:"end_time"`
 	State     SessionState `json:"state"`
+	Machine   *MachineInfo `json:"machine"`
 
 	SampleCount  int32          `json:"sample_count"`
 	Container    *ContainerInfo `json:"container"`
