@@ -59,7 +59,7 @@ func (factory *driverFactory) Create(parameters map[string]interface{}) (contain
 	}
 
 	d := &driver{
-		host:    convertMachineInfo(machine),
+		machine: convertMachineInfo(machine),
 		manager: m,
 	}
 
@@ -92,7 +92,7 @@ func init() {
 
 type driver struct {
 	manager manager.Manager
-	host    *containers.MachineInfo
+	machine *containers.MachineInfo
 }
 
 func (d *driver) WatchEvents(ctx context.Context, types ...containers.EventType) (containers.EventsChannel, error) {
@@ -112,7 +112,7 @@ func (d *driver) WatchEvents(ctx context.Context, types ...containers.EventType)
 func parseImageData(image string) (string, string) {
 	parts := strings.Split(image, ":")
 	if len(parts) < 2 {
-		return image, "latest"
+		return image, ""
 	} else if parts[1] == "" {
 		parts[1] = "latest"
 	}
@@ -124,18 +124,19 @@ func convertMachineInfo(info *v1.MachineInfo) *containers.MachineInfo {
 	return &containers.MachineInfo{
 		SystemUuid:      info.SystemUUID,
 		Cores:           info.NumCores,
-		Memory:          info.MemoryCapacity,
+		MemoryBytes:     info.MemoryCapacity,
 		CpuFrequencyKhz: info.CpuFrequency,
 	}
 }
 
-func convertContainerInfo(info v1.ContainerInfo) *containers.ContainerInfo {
+func convertContainerInfo(info v1.ContainerInfo, machine *containers.MachineInfo) *containers.ContainerInfo {
 	imageName, imageTag := parseImageData(info.Spec.Image)
 	return &containers.ContainerInfo{
 		Name:      info.Name,
 		ImageName: imageName,
 		ImageTag:  imageTag,
 		Labels:    info.Labels,
+		Machine:   machine,
 		Reserved: &containers.ReservedResources{
 			// from cadvisor: cpu hard limit in milli-cpus (default 0)
 			Cpu:    float64(info.Spec.Cpu.MaxLimit) / 1000,
@@ -144,13 +145,14 @@ func convertContainerInfo(info v1.ContainerInfo) *containers.ContainerInfo {
 	}
 }
 
-func convertContainerSpec(name string, spec v2.ContainerSpec) *containers.ContainerInfo {
+func convertContainerSpec(name string, spec v2.ContainerSpec, machine *containers.MachineInfo) *containers.ContainerInfo {
 	imageName, imageTag := parseImageData(spec.Image)
 	return &containers.ContainerInfo{
 		Name:      name,
 		ImageName: imageName,
 		ImageTag:  imageTag,
 		Labels:    spec.Labels,
+		Machine:   machine,
 	}
 }
 
@@ -163,7 +165,7 @@ func (d *driver) GetContainers(ctx context.Context) ([]*containers.ContainerInfo
 
 	result := make([]*containers.ContainerInfo, 0)
 	for _, info := range rawContainers {
-		result = append(result, convertContainerInfo(info))
+		result = append(result, convertContainerInfo(info, d.machine))
 	}
 
 	return result, nil
@@ -190,7 +192,7 @@ func (d *driver) GetContainer(ctx context.Context, name string) (*containers.Con
 		return nil, err
 	}
 
-	return convertContainerSpec(name, specMap[name]), nil
+	return convertContainerSpec(name, specMap[name], d.machine), nil
 }
 
 func (d *driver) GetContainerStats(ctx context.Context, name string) (containers.StatsChannel, error) {

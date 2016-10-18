@@ -70,7 +70,7 @@ type Driver interface {
 type MachineInfo struct {
 	SystemUuid      string `json:"system_uuid"`
 	Cores           int    `json:"cores"`
-	Memory          uint64 `json:"memory_byes"`
+	MemoryBytes     uint64 `json:"memory_byes"`
 	CpuFrequencyKhz uint64 `json:"cpu_frequency_khz"`
 }
 

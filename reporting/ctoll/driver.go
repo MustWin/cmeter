@@ -38,12 +38,22 @@ func init() {
 	factory.Register("ctoll", &driverFactory{})
 }
 
+func convertMachineInfo(m *containers.MachineInfo) *v1.MachineInfo {
+	return &v1.MachineInfo{
+		SystemUuid:      m.SystemUuid,
+		Cores:           m.Cores,
+		CpuFrequencyKhz: m.CpuFrequencyKhz,
+		MemoryBytes:     m.MemoryBytes,
+	}
+}
+
 func convertContainerInfo(ci *containers.ContainerInfo) *v1.ContainerInfo {
 	return &v1.ContainerInfo{
 		ImageName: ci.ImageName,
 		ImageTag:  ci.ImageTag,
 		Name:      ci.Name,
 		Labels:    ci.Labels,
+		Machine:   convertMachineInfo(ci.Machine),
 	}
 }
 
