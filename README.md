@@ -68,8 +68,9 @@ reporting: 'mock'
 
 # or with driver parameters
 reporting:
-  mock:
-    parameter1: 'foo'
+  ctoll:
+    apikey: '2390511a-870d-11e6-ae22-56b6b6499611'
+    endpoint: 'localhost:9090'
 
 # Similar to the reporting driver section
 containers: 'embedded'
