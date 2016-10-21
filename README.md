@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
-cMeter (Container Meter) provides tenant container hosts with a container metering solution. 
+cMeter (Container Meter) provides container hosts with a container metering solution.
 
 ## Installation
 
