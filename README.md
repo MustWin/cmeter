@@ -10,18 +10,6 @@ cMeter (Container Meter) provides tenant container hosts with a container meteri
 
 > $ go get github.com/MustWin/cmeter
 
-### Tools
-
-These are tools used for development.
-
-#### Vendoring
-
-cMeter uses `gvt` to track and vendor dependencies, install with:
-
-> $ go get github.com/FiloSottile/gvt
-
-For details on usage, see [the project's github](https://github.com/FiloSottile/gvt).
-
 ## Usage
 
 > $ cmeter agent <config_path>
@@ -81,55 +69,15 @@ containers: 'embedded'
 
 Both `reporting` and `containers` only allow specification of *one* driver per configuration. Anymore will cause a validation error when the application starts.
 
-## Building
+## Bugs and Feedback
 
-One caveat with building currently is that because of the cAdvisor dependency for the containers driver, `cgo` *cannot* be disabled; the build will fail. So no `CGO_ENABLED=0` builds.
+If you see a bug or have a suggestion, feel free to open an issue [here](https://github.com/MustWin/cmeter/issues).
 
-#### Dev/Local build
+## Contributions
 
-Use `go` and build from the root of the project:
+PR's welcome! There are no strict style guidelines, just follow best practices and try to keep with the general look & feel of the code present. All submissions should at least be `go fmt -s` and have a test to verify *(if applicable)*.
 
-> $ go build
-
-Please note the version number displayed will be the value of `main.DEFAULT_VERSION`
-
-#### Local versioned build
-
-Use `make` to create a versioned build:
-
-> $ make compile
-
-The default version is a semver-compatible string made up of the contents of the `/VERSION` file and the short form of the current git hash (e.g: `1.0.0-c63076f`). To override this default version, you may use the `BUILD_VERSION` environment variable to set it manually:
-
-> $ BUILD_VERSION=7.7.7-lucky make compile
-
-#### Dist build
-
-This is primarily meant to be used when building the docker image. Distribution builds are versioned like the local versioned builds and the build specifically targets `linux`
-
-> $ make dist
-
-#### Docker Image
-
-Building a Docker Image is a two-step process because of the CGO requirement and the desire to keep a small image size. First we build the distribution binary:
-
-> $ make dist
-
-And then we can make the image:
-
-> $ make image
-
-The default image repo used is that of the Makefile's `DOCKER_REPO` variable. The image tag is the `BUILD_VERSION` variable and can be overridden as noted in the *"Local versioned build"* section above.
-
-## Testing
-
-Use `make` to run tests:
-
-> $ make test
-
-You can also use `go test` directly for any package without additional bootstrapping:
-
-> $ go test ./agent/
+For details on how to extend and develop cSense, see the [dev documentation](docs/development/).
 
 ## License
 
