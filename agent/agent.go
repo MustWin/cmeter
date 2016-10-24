@@ -114,6 +114,8 @@ func (agent *Agent) ProcessEvents(wg sync.WaitGroup) {
 func (agent *Agent) ProcessSamples(wg sync.WaitGroup) {
 	defer wg.Done()
 
+	context.GetLogger(agent).Info("sample collector started")
+	defer context.GetLogger(agent).Info("sample collector stopped")
 	for sample := range agent.collector.GetChannel() {
 		// The sample container data is incomplete and only contains the name.
 		// We'll do a lookup and attach our known data to it
