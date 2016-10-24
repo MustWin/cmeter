@@ -39,6 +39,8 @@ func (filter *Filter) HandleMessage(ctx context.Context, m pipeline.Message) err
 				},
 				Container: container,
 			}))
+		} else {
+			return pipeline.StopProcessing(ctx)
 		}
 
 	case statechange.TYPE:
