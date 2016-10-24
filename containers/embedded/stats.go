@@ -69,6 +69,7 @@ func newStatsChannel(manager manager.Manager, container *containers.ContainerInf
 		manager:   manager,
 		container: container,
 		closed:    false,
+		ch:        make(chan *containers.Stats),
 	}
 }
 
