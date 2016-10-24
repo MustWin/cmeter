@@ -36,19 +36,20 @@ func (ch *statsChannel) startChannel() {
 	for {
 		select {
 		case done, ok := <-ch.closer:
-			if ok && !done {
-				ci, err := ch.manager.GetContainerInfo(ch.container.Name, &v1.ContainerInfoRequest{NumStats: 1})
-				if err == nil && ci != nil && len(ci.Stats) > 0 {
-					ch.ch <- convertContainerInfoToStats(ci.Stats[0])
-					continue
-				}
+			if done || !ok {
+				ch.closedMutex.Lock()
+				defer ch.closedMutex.Unlock()
+				close(ch.ch)
+				ch.closed = true
+				return
 			}
 
-			ch.closedMutex.Lock()
-			defer ch.closedMutex.Unlock()
-			close(ch.ch)
-			ch.closed = true
-			return
+		default:
+			ci, err := ch.manager.GetContainerInfo(ch.container.Name, &v1.ContainerInfoRequest{NumStats: 1})
+			if err == nil && ci != nil && len(ci.Stats) > 0 {
+				ch.ch <- convertContainerInfoToStats(ci.Stats[0])
+				continue
+			}
 		}
 	}
 }
