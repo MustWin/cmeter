@@ -1,6 +1,8 @@
 package reporting
 
 import (
+	"time"
+
 	"github.com/MustWin/cmeter/context"
 )
 
@@ -22,4 +24,13 @@ var (
 
 type Driver interface {
 	Report(ctx context.Context, e *Event) (Receipt, error)
+}
+
+func Generate(ctx context.Context, eventType string, data interface{}) *Event {
+	return &Event{
+		Timestamp: time.Now().Unix(),
+		MeterID:   context.GetInstanceID(ctx),
+		Type:      eventType,
+		Data:      data,
+	}
 }
