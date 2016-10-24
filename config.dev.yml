@@ -11,14 +11,14 @@ tracking:
   tracking_label: 'com.example.track'
 
 collector:
-  rate: 1800
+  rate: 5000
 
 #reporting: 'mock'
 reporting:
   ctoll:
     # Acme Org API key from cToll seed
     apikey: '2390511a-870d-11e6-ae22-56b6b6499611'
-    endpoint: 'localhost:9090'
+    endpoint: 'http://localhost:9180'
 #  http:
 #    url: 'http://example.org/events'
 #    method: 'POST'
