@@ -18,6 +18,7 @@ func newEventChannel(cec *events.EventChannel) *eventChannel {
 	}
 
 	go func() {
+		defer close(ec.channel)
 		for src := range cec.GetChannel() {
 			e := &containers.Event{
 				Container: &containers.ContainerInfo{
@@ -29,8 +30,6 @@ func newEventChannel(cec *events.EventChannel) *eventChannel {
 
 			ec.channel <- e
 		}
-
-		close(ec.channel)
 	}()
 
 	return ec
