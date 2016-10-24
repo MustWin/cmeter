@@ -11,13 +11,12 @@ import (
 )
 
 type statsChannel struct {
-	startFetch  sync.Once
-	manager     manager.Manager
-	container   *containers.ContainerInfo
-	ch          chan *containers.Stats
-	closer      chan bool
-	closedMutex sync.Mutex
-	closed      bool
+	startFetch sync.Once
+	manager    manager.Manager
+	container  *containers.ContainerInfo
+	ch         chan *containers.Stats
+	doneCh     chan bool
+	closed     bool
 }
 
 func (ch *statsChannel) Container() *containers.ContainerInfo {
@@ -33,14 +32,11 @@ func (ch *statsChannel) GetChannel() <-chan *containers.Stats {
 }
 
 func (ch *statsChannel) startChannel() {
+	defer close(ch.ch)
 	for {
 		select {
-		case done, ok := <-ch.closer:
+		case done, ok := <-ch.doneCh:
 			if done || !ok {
-				ch.closedMutex.Lock()
-				defer ch.closedMutex.Unlock()
-				close(ch.ch)
-				ch.closed = true
 				return
 			}
 
@@ -48,20 +44,21 @@ func (ch *statsChannel) startChannel() {
 			ci, err := ch.manager.GetContainerInfo(ch.container.Name, &v1.ContainerInfoRequest{NumStats: 1})
 			if err == nil && ci != nil && len(ci.Stats) > 0 {
 				ch.ch <- convertContainerInfoToStats(ci.Stats[0])
-				continue
 			}
 		}
 	}
 }
 
 func (ch *statsChannel) Close() error {
-	ch.closedMutex.Lock()
-	defer ch.closedMutex.Unlock()
-	if ch.closed {
-		return errors.New("already closed")
+	select {
+	case _, ok := <-ch.doneCh:
+		if !ok {
+			return errors.New("stats channel already closed")
+		}
 	}
 
-	ch.closer <- true
+	ch.doneCh <- true
+	close(ch.doneCh)
 	return nil
 }
 
@@ -71,6 +68,7 @@ func newStatsChannel(manager manager.Manager, container *containers.ContainerInf
 		container: container,
 		closed:    false,
 		ch:        make(chan *containers.Stats),
+		doneCh:    make(chan bool),
 	}
 }
 
