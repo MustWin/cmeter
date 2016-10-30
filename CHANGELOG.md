@@ -4,10 +4,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- docker image building with Makefile's `image` target
-- `dist` Makefile target, for use with the docker image build.
 - `http` reporting driver for generic http reporting.
-- first test!
 - `logging.fields` configuration value support to add custom log fields
 
 ### Removed
@@ -32,7 +29,3 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - embedded cAdvisor containers driver
 - reporting driver abstraction
 - containers driver abstraction
-- basic README
-- VERSION file
-- this Changelog
-- basic Makefile with `all`, `clean`, and `compile` targets
