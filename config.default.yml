@@ -1,0 +1,14 @@
+version: 0.1
+
+logging:
+  level: 'info'
+  formatter: 'text'
+
+
+tracking:
+  tracking_label: 'cmeter.track'
+
+collector:
+  rate: 5000
+
+# don't default `containers` or `reporting` to require user setting it
