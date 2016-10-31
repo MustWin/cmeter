@@ -59,8 +59,11 @@ reporting: 'mock'
 # or with driver parameters
 reporting:
   ctoll:
-    apikey: '2390511a-870d-11e6-ae22-56b6b6499611'
-    endpoint: 'localhost:9090'
+    # default api key to use if label from `key_label` isn't present
+    apikey: '2390513a-870d-11e6-ae22-56b6b6499611'
+    endpoint: 'http://api.containerstuff.norg'
+    # the label with the api key for the container 
+    key_label: 'ctoll_api_key'
 
 # Similar to the reporting driver section
 containers: 'embedded'

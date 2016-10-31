@@ -29,8 +29,10 @@ func (factory *driverFactory) Create(parameters map[string]interface{}) (reporti
 		return nil, errors.New("cToll api key missing or invalid")
 	}
 
+	keyLabel, _ := parameters["key_label"].(string)
 	return &Driver{
-		client: ctollclient.New(endpoint, apiKey, http.DefaultClient),
+		keyLabel: keyLabel,
+		client:   ctollclient.New(endpoint, apiKey, http.DefaultClient),
 	}, nil
 }
 
@@ -77,7 +79,8 @@ func calculateUsage(stats *containers.Stats) *v1.Usage {
 }
 
 type Driver struct {
-	client *ctollclient.Client
+	keyLabel string
+	client   *ctollclient.Client
 }
 
 func (d *Driver) Report(ctx context.Context, e *reporting.Event) (reporting.Receipt, error) {
@@ -87,6 +90,18 @@ func (d *Driver) Report(ctx context.Context, e *reporting.Event) (reporting.Rece
 	}
 
 	return reporting.Receipt(string(receiptData)), err
+}
+
+func (d *Driver) apiKeyFromLabel(labels map[string]string) string {
+	if d.keyLabel == "" {
+		return ""
+	}
+
+	if v, ok := labels[d.keyLabel]; ok {
+		return v
+	}
+
+	return ""
 }
 
 func (d *Driver) sendMeterStart(me *v1.MeterEvent, ch *containers.StateChange) ([]byte, error) {
@@ -100,7 +115,8 @@ func (d *Driver) sendMeterStart(me *v1.MeterEvent, ch *containers.StateChange) (
 		},
 	}
 
-	return []byte{}, d.client.MeterEvents().SendStartMeter(e)
+	key := d.apiKeyFromLabel(ch.Container.Labels)
+	return []byte{}, d.client.MeterEvents().SendStartMeter(key, e)
 }
 
 func (d *Driver) sendMeterStop(me *v1.MeterEvent, ch *containers.StateChange) ([]byte, error) {
@@ -108,7 +124,8 @@ func (d *Driver) sendMeterStop(me *v1.MeterEvent, ch *containers.StateChange) ([
 	me.Container = convertContainerInfo(ch.Container)
 
 	e := v1.StopMeterEvent{MeterEvent: me}
-	return []byte{}, d.client.MeterEvents().SendStopMeter(e)
+	key := d.apiKeyFromLabel(ch.Container.Labels)
+	return []byte{}, d.client.MeterEvents().SendStopMeter(key, e)
 }
 
 func (d *Driver) sendMeterSample(me *v1.MeterEvent, s *collector.Sample) ([]byte, error) {
@@ -120,7 +137,8 @@ func (d *Driver) sendMeterSample(me *v1.MeterEvent, s *collector.Sample) ([]byte
 		Usage:      calculateUsage(s.Stats),
 	}
 
-	return []byte{}, d.client.MeterEvents().SendUsageSample(e)
+	key := d.apiKeyFromLabel(s.Container.Labels)
+	return []byte{}, d.client.MeterEvents().SendUsageSample(key, e)
 }
 
 func (d *Driver) sendEvent(e *reporting.Event) ([]byte, error) {
