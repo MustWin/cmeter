@@ -1,7 +1,6 @@
 package ctoll
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -24,11 +23,7 @@ func (factory *driverFactory) Create(parameters map[string]interface{}) (reporti
 		endpoint = "http://localhost:9180"
 	}
 
-	apiKey, ok := parameters["apikey"].(string)
-	if !ok || apiKey == "" {
-		return nil, errors.New("cToll api key missing or invalid")
-	}
-
+	apiKey, _ := parameters["apikey"].(string)
 	keyLabel, _ := parameters["key_label"].(string)
 	return &Driver{
 		keyLabel: keyLabel,
