@@ -5,7 +5,7 @@
 			"importpath": "github.com/MustWin/ctoll/ctoll/api/client",
 			"repository": "https://github.com/MustWin/ctoll",
 			"vcs": "git",
-			"revision": "c17a425f5c9d904c7557897838c904ba0e4293f5",
+			"revision": "2f9a3bd5cae66a336c3c7b1f2b723df82e578481",
 			"branch": "master",
 			"path": "/ctoll/api/client",
 			"notests": true

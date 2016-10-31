@@ -11,18 +11,18 @@ import (
 const CLIENT_USER_AGENT = "ctoll-client/1.0.0"
 
 type Client struct {
-	setup      sync.Once
-	ApiKey     string
-	urlBuilder *v1.URLBuilder
-	Endpoint   string
-	HTTPClient *http.Client
+	setup         sync.Once
+	DefaultAPIKey string
+	urlBuilder    *v1.URLBuilder
+	Endpoint      string
+	HTTPClient    *http.Client
 }
 
 func New(endpoint string, apiKey string, httpClient *http.Client) *Client {
 	return &Client{
-		Endpoint:   endpoint,
-		ApiKey:     apiKey,
-		HTTPClient: httpClient,
+		Endpoint:      endpoint,
+		DefaultAPIKey: apiKey,
+		HTTPClient:    httpClient,
 	}
 }
 
@@ -37,6 +37,16 @@ func (c *Client) urls() *v1.URLBuilder {
 	})
 
 	return c.urlBuilder
+}
+
+func (c *Client) useAPIKey(r *http.Request, apiKey string) {
+	if apiKey == "" {
+		apiKey = c.DefaultAPIKey
+	}
+
+	if apiKey != "" {
+		r.Header.Add("CTOLL-API-KEY", apiKey)
+	}
 }
 
 func (c *Client) Ping() error {
@@ -65,9 +75,5 @@ func (c *Client) Ping() error {
 
 func (c *Client) do(r *http.Request) (*http.Response, error) {
 	r.Header.Add("USER-AGENT", CLIENT_USER_AGENT)
-	if c.ApiKey != "" {
-		r.Header.Add("CTOLL-API-KEY", c.ApiKey)
-	}
-
 	return c.HTTPClient.Do(r)
 }

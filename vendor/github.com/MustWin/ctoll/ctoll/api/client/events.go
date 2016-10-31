@@ -10,9 +10,9 @@ import (
 )
 
 type MeterEventClient interface {
-	SendUsageSample(e v1.SampleMeterEvent) error
-	SendStartMeter(e v1.StartMeterEvent) error
-	SendStopMeter(e v1.StopMeterEvent) error
+	SendUsageSample(apiKey string, e v1.SampleMeterEvent) error
+	SendStartMeter(apiKey string, e v1.StartMeterEvent) error
+	SendStopMeter(apiKey string, e v1.StopMeterEvent) error
 }
 
 type meterEventClient struct {
@@ -23,7 +23,7 @@ func (c *Client) MeterEvents() MeterEventClient {
 	return &meterEventClient{c}
 }
 
-func (c *meterEventClient) sendMeterEvent(body []byte) ([]byte, error) {
+func (c *meterEventClient) sendMeterEvent(apiKey string, body []byte) ([]byte, error) {
 	urlStr, err := c.urls().BuildMeterEvents()
 	if err != nil {
 		return nil, err
@@ -34,6 +34,7 @@ func (c *meterEventClient) sendMeterEvent(body []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	c.useAPIKey(r, apiKey)
 	resp, err := c.do(r)
 	if err != nil {
 		return nil, err
@@ -48,32 +49,32 @@ func (c *meterEventClient) sendMeterEvent(body []byte) ([]byte, error) {
 	return buf, err
 }
 
-func (c *meterEventClient) SendUsageSample(e v1.SampleMeterEvent) error {
+func (c *meterEventClient) SendUsageSample(apiKey string, e v1.SampleMeterEvent) error {
 	body, err := json.Marshal(e)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.sendMeterEvent(body)
+	_, err = c.sendMeterEvent(apiKey, body)
 	return err
 }
 
-func (c *meterEventClient) SendStartMeter(e v1.StartMeterEvent) error {
+func (c *meterEventClient) SendStartMeter(apiKey string, e v1.StartMeterEvent) error {
 	body, err := json.Marshal(e)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.sendMeterEvent(body)
+	_, err = c.sendMeterEvent(apiKey, body)
 	return err
 }
 
-func (c *meterEventClient) SendStopMeter(e v1.StopMeterEvent) error {
+func (c *meterEventClient) SendStopMeter(apiKey string, e v1.StopMeterEvent) error {
 	body, err := json.Marshal(e)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.sendMeterEvent(body)
+	_, err = c.sendMeterEvent(apiKey, body)
 	return err
 }
