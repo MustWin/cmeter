@@ -3,6 +3,7 @@ package embedded
 import (
 	"flag"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -60,9 +61,12 @@ func (factory *driverFactory) Create(parameters map[string]interface{}) (contain
 		return nil, err
 	}
 
+	cpuLimitLabel, _ := parameters["cpu_limit_label"].(string)
+
 	d := &driver{
-		machine: convertMachineInfo(machine),
-		manager: m,
+		cpuLimitLabel: cpuLimitLabel,
+		machine:       convertMachineInfo(machine),
+		manager:       m,
 	}
 
 	if err = m.Start(); err != nil {
@@ -93,8 +97,9 @@ func init() {
 }
 
 type driver struct {
-	manager manager.Manager
-	machine *containers.MachineInfo
+	cpuLimitLabel string
+	manager       manager.Manager
+	machine       *containers.MachineInfo
 }
 
 func (d *driver) WatchEvents(ctx context.Context, types ...containers.EventType) (containers.EventsChannel, error) {
@@ -126,6 +131,24 @@ func maxCpuLimit(shares float64, cores int) float64 {
 	return ((shares / sharesPerCPU) * 100) / float64(cores)
 }
 
+func maxCpuLimitOverride(labels map[string]string, limitLabel string) float64 {
+	if limitLabel == "" {
+		return 0
+	}
+
+	limitStr, ok := labels[limitLabel]
+	if !ok || limitStr == "" {
+		return 0
+	}
+
+	f, err := strconv.ParseFloat(limitStr, 64)
+	if err != nil {
+		return 0
+	}
+
+	return f
+}
+
 func convertMachineInfo(info *v1.MachineInfo) *containers.MachineInfo {
 	return &containers.MachineInfo{
 		SystemUuid:      info.SystemUUID,
@@ -135,8 +158,13 @@ func convertMachineInfo(info *v1.MachineInfo) *containers.MachineInfo {
 	}
 }
 
-func convertContainerInfo(info v1.ContainerInfo, machine *containers.MachineInfo) *containers.ContainerInfo {
+func convertContainerInfo(info v1.ContainerInfo, machine *containers.MachineInfo, cpuLimitLabel string) *containers.ContainerInfo {
 	imageName, imageTag := parseImageData(info.Spec.Image)
+	cpuLimit := maxCpuLimit(float64(info.Spec.Cpu.Limit), machine.Cores)
+	if cpuLimitLabel != "" {
+		cpuLimit = maxCpuLimitOverride(info.Labels, cpuLimitLabel)
+	}
+
 	return &containers.ContainerInfo{
 		Name:      info.Name,
 		ImageName: imageName,
@@ -144,14 +172,19 @@ func convertContainerInfo(info v1.ContainerInfo, machine *containers.MachineInfo
 		Labels:    info.Labels,
 		Machine:   machine,
 		Reserved: &containers.ReservedResources{
-			Cpu:    maxCpuLimit(float64(info.Spec.Cpu.Limit), machine.Cores),
+			Cpu:    cpuLimit,
 			Memory: info.Spec.Memory.Limit,
 		},
 	}
 }
 
-func convertContainerSpec(name string, spec v2.ContainerSpec, machine *containers.MachineInfo) *containers.ContainerInfo {
+func convertContainerSpec(name string, spec v2.ContainerSpec, machine *containers.MachineInfo, cpuLimitLabel string) *containers.ContainerInfo {
 	imageName, imageTag := parseImageData(spec.Image)
+	cpuLimit := maxCpuLimit(float64(spec.Cpu.Limit), machine.Cores)
+	if cpuLimitLabel != "" {
+		cpuLimit = maxCpuLimitOverride(spec.Labels, cpuLimitLabel)
+	}
+
 	return &containers.ContainerInfo{
 		Name:      name,
 		ImageName: imageName,
@@ -159,7 +192,7 @@ func convertContainerSpec(name string, spec v2.ContainerSpec, machine *container
 		Labels:    spec.Labels,
 		Machine:   machine,
 		Reserved: &containers.ReservedResources{
-			Cpu:    maxCpuLimit(float64(spec.Cpu.Limit), machine.Cores),
+			Cpu:    cpuLimit,
 			Memory: spec.Memory.Limit,
 		},
 	}
@@ -174,19 +207,13 @@ func (d *driver) GetContainers(ctx context.Context) ([]*containers.ContainerInfo
 
 	result := make([]*containers.ContainerInfo, 0)
 	for _, info := range rawContainers {
-		result = append(result, convertContainerInfo(info, d.machine))
+		result = append(result, convertContainerInfo(info, d.machine, d.cpuLimitLabel))
 	}
 
 	return result, nil
 }
 
 func (d *driver) GetContainer(ctx context.Context, name string) (*containers.ContainerInfo, error) {
-	/*if !d.manager.Exists(name) {
-		return nil, containers.ErrContainerNotFound
-	}*/
-
-	//r := &v1.ContainerInfoRequest{NumStats: 0}
-	//info, err := d.manager.GetContainerInfo(name, r)
 	specMap, err := d.manager.GetContainerSpec(name, v2.RequestOptions{
 		IdType:    "name",
 		Count:     0,
@@ -201,7 +228,7 @@ func (d *driver) GetContainer(ctx context.Context, name string) (*containers.Con
 		return nil, err
 	}
 
-	return convertContainerSpec(name, specMap[name], d.machine), nil
+	return convertContainerSpec(name, specMap[name], d.machine, d.cpuLimitLabel), nil
 }
 
 func (d *driver) GetContainerStats(ctx context.Context, name string) (containers.StatsChannel, error) {
