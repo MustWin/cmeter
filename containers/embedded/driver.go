@@ -27,6 +27,8 @@ const (
 	maxHousekeepingInterval     = 15 * time.Second
 	defaultHousekeepingInterval = 5 * time.Second
 	allowDynamicHousekeeping    = true
+
+	sharesPerCPU = 1024.0
 )
 
 func init() {
@@ -120,6 +122,10 @@ func parseImageData(image string) (string, string) {
 	return parts[0], parts[1]
 }
 
+func maxCpuLimit(shares float64, cores int) float64 {
+	return ((shares / sharesPerCPU) * 100) / float64(cores)
+}
+
 func convertMachineInfo(info *v1.MachineInfo) *containers.MachineInfo {
 	return &containers.MachineInfo{
 		SystemUuid:      info.SystemUUID,
@@ -138,8 +144,7 @@ func convertContainerInfo(info v1.ContainerInfo, machine *containers.MachineInfo
 		Labels:    info.Labels,
 		Machine:   machine,
 		Reserved: &containers.ReservedResources{
-			// from cadvisor: cpu hard limit in milli-cpus (default 0)
-			Cpu:    float64(info.Spec.Cpu.MaxLimit) / 1000,
+			Cpu:    maxCpuLimit(float64(info.Spec.Cpu.Limit), machine.Cores),
 			Memory: info.Spec.Memory.Limit,
 		},
 	}
@@ -154,7 +159,7 @@ func convertContainerSpec(name string, spec v2.ContainerSpec, machine *container
 		Labels:    spec.Labels,
 		Machine:   machine,
 		Reserved: &containers.ReservedResources{
-			Cpu:    float64(spec.Cpu.MaxLimit) / 1000,
+			Cpu:    maxCpuLimit(float64(spec.Cpu.Limit), machine.Cores),
 			Memory: spec.Memory.Limit,
 		},
 	}
