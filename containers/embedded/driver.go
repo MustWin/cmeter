@@ -153,6 +153,10 @@ func convertContainerSpec(name string, spec v2.ContainerSpec, machine *container
 		ImageTag:  imageTag,
 		Labels:    spec.Labels,
 		Machine:   machine,
+		Reserved: &containers.ReservedResources{
+			Cpu:    float64(spec.Cpu.MaxLimit) / 1000,
+			Memory: spec.Memory.Limit,
+		},
 	}
 }
 
