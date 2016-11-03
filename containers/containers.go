@@ -1,8 +1,12 @@
 package containers
 
 import (
+	"errors"
+
 	"github.com/MustWin/cmeter/context"
 )
+
+var ErrContainerNotFound = errors.New("container not found")
 
 type EventType string
 
