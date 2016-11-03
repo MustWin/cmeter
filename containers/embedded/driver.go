@@ -128,7 +128,7 @@ func parseImageData(image string) (string, string) {
 }
 
 func maxCpuLimit(shares float64, cores int) float64 {
-	return ((shares / sharesPerCPU) * 100) / float64(cores)
+	return shares / sharesPerCPU
 }
 
 func maxCpuLimitOverride(labels map[string]string, limitLabel string) float64 {
