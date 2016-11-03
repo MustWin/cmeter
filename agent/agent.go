@@ -117,7 +117,14 @@ func (agent *Agent) ProcessStateChange(c *containers.StateChange, registered boo
 func (agent *Agent) ProcessEvents(wg sync.WaitGroup) {
 	defer wg.Done()
 
-	eventChan, err := agent.containers.WatchEvents(agent, containers.EventContainerCreation, containers.EventContainerDeletion)
+	eventTypes := []containers.EventType{
+		containers.EventContainerCreation,
+		containers.EventContainerDeletion,
+		containers.EventContainerOom,
+		containers.EventContainerOomKill,
+	}
+
+	eventChan, err := agent.containers.WatchEvents(agent, eventTypes...)
 	if err != nil {
 		context.GetLogger(agent).Panicf("error opening event channel: %v", err)
 		return

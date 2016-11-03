@@ -30,7 +30,7 @@ func StateFromEvent(eventType EventType) State {
 	switch eventType {
 	case EventContainerCreation:
 		return StateRunning
-	case EventContainerDeletion:
+	case EventContainerDeletion, EventContainerOom, EventContainerOomKill:
 		return StateStopped
 	}
 
