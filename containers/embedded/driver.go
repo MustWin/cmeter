@@ -131,19 +131,19 @@ func maxCpuLimit(shares float64, cores int) float64 {
 	return shares / sharesPerCPU
 }
 
-func maxCpuLimitOverride(labels map[string]string, limitLabel string) float64 {
+func maxCpuLimitOverride(limit float64, labels map[string]string, limitLabel string) float64 {
 	if limitLabel == "" {
-		return 0
+		return limit
 	}
 
 	limitStr, ok := labels[limitLabel]
 	if !ok || limitStr == "" {
-		return 0
+		return limit
 	}
 
 	f, err := strconv.ParseFloat(limitStr, 64)
 	if err != nil {
-		return 0
+		return limit
 	}
 
 	return f
@@ -162,7 +162,7 @@ func convertContainerInfo(info v1.ContainerInfo, machine *containers.MachineInfo
 	imageName, imageTag := parseImageData(info.Spec.Image)
 	cpuLimit := maxCpuLimit(float64(info.Spec.Cpu.Limit), machine.Cores)
 	if cpuLimitLabel != "" {
-		cpuLimit = maxCpuLimitOverride(info.Labels, cpuLimitLabel)
+		cpuLimit = maxCpuLimitOverride(cpuLimit, info.Labels, cpuLimitLabel)
 	}
 
 	return &containers.ContainerInfo{
@@ -182,7 +182,7 @@ func convertContainerSpec(name string, spec v2.ContainerSpec, machine *container
 	imageName, imageTag := parseImageData(spec.Image)
 	cpuLimit := maxCpuLimit(float64(spec.Cpu.Limit), machine.Cores)
 	if cpuLimitLabel != "" {
-		cpuLimit = maxCpuLimitOverride(spec.Labels, cpuLimitLabel)
+		cpuLimit = maxCpuLimitOverride(cpuLimit, spec.Labels, cpuLimitLabel)
 	}
 
 	return &containers.ContainerInfo{
