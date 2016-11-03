@@ -210,7 +210,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 	log.Infof("using %q logging formatter", config.Log.Formatter)
 	log.Infof("using %q containers driver", config.Containers.Type())
 	log.Infof("using %q reporting driver", config.Reporting.Type())
-	log.Infof("tracking %q label", config.Tracking.TrackingLabel)
+	log.Infof("using %q tracking label", config.Tracking.TrackingLabel)
 
 	return &Agent{
 		Context:    ctx,
