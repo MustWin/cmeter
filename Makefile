@@ -1,17 +1,30 @@
-DOCKER_REPO=test/cmeter
 VERSION_FILE=VERSION
 SRC_PKGS=$(shell go list ./... | grep -v vendor)
-REV=$(shell git rev-parse --short HEAD)
-ifeq ($(BUILD_VERSION),)
-	BUILD_VERSION=$(shell cat $(VERSION_FILE))-$(REV)
+ifeq ($(strip $(NO_REV)),)
+	REV=$(shell git rev-parse --short HEAD)
 endif
 
-.PHONY: clean image test
+ifeq ($(BUILD_VERSION),)
+	VERSION=$(shell cat $(VERSION_FILE))
+	ifeq ($(strip $(REV)),) 
+		BUILD_VERSION=$(VERSION)
+	else
+		BUILD_VERSION=$(VERSION)-$(REV)
+	endif
+endif
+
+IMAGE_REPO=containeropsco/cmeter
+ifeq ($(IMAGE_NAME),)
+	IMAGE_NAME=$(IMAGE_REPO):$(BUILD_VERSION)
+endif 
+
+.PHONY: clean image test push-image
 
 all: compile
 
 clean:
 	go clean ./...
+	rm dist
 
 compile:
 	go build -ldflags "-X main.appVersion=$(BUILD_VERSION)" .
@@ -19,8 +32,12 @@ compile:
 dist:
 	GOOS=linux go build -ldflags "-X main.appVersion=$(BUILD_VERSION)" -o dist .
 
-image:
-	docker build -t $(DOCKER_REPO):$(BUILD_VERSION) .
+push-image:
+	docker push $(IMAGE_NAME)
+	docker push $(IMAGE_REPO):latest
+
+image: 
+	docker build -t $(IMAGE_NAME) -t $(IMAGE_REPO):latest .
 
 test:
 	set -e; 
