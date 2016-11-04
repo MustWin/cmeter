@@ -83,6 +83,8 @@ reporting:
 # Similar to the reporting driver section
 containers:
   embedded:
+    # container label with the value to override the container cpu limit tracked by cmeter (in milli-cores, e.g: '0.002', '0.1', '2.0')
+    cpu_limit_label: 'cpulimit'
     # whitelist of environment variables allowed to be exposed to cmeter
     envs: ['WHITELISTED_ENV']
 
