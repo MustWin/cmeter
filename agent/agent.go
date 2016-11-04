@@ -218,6 +218,9 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 	log.Infof("using %q containers driver", config.Containers.Type())
 	log.Infof("using %q reporting driver", config.Reporting.Type())
 	log.Infof("using %q tracking label", config.Tracking.TrackingLabel)
+	if config.Tracking.EnvKey != "" {
+		log.Infof("using %q tracking environment key", config.Tracking.EnvKey)
+	}
 
 	return &Agent{
 		Context:    ctx,
