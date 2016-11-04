@@ -4,4 +4,4 @@ COPY ./dist /bin/cmeter
 
 WORKDIR /
 
-CMD /bin/cmeter agent
+ENTRYPOINT ['/bin/cmeter']
