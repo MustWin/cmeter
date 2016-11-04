@@ -105,7 +105,7 @@ func (d *Driver) sendMeterStart(me *v1.MeterEvent, ch *containers.StateChange) (
 	e := v1.StartMeterEvent{
 		MeterEvent: me,
 		Allocated: &v1.BlockAlloc{
-			MaxCPUPerc:  ch.Container.Reserved.Cpu,
+			CPUShares:   ch.Container.Reserved.Cpu,
 			MemoryBytes: ch.Container.Reserved.Memory,
 		},
 	}
