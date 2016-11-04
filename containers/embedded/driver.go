@@ -2,7 +2,6 @@ package embedded
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -190,8 +189,6 @@ func convertContainerInfo(info v1.ContainerInfo, machine *containers.MachineInfo
 		cpuLimit = maxCpuLimitOverride(cpuLimit, info.Labels, cpuLimitLabel)
 	}
 
-	fmt.Printf("envs: %+#v\n", info.Spec.Envs)
-
 	return &containers.ContainerInfo{
 		Name:      info.Name,
 		ImageName: imageName,
@@ -212,8 +209,6 @@ func convertContainerSpec(name string, spec v2.ContainerSpec, machine *container
 	if cpuLimitLabel != "" {
 		cpuLimit = maxCpuLimitOverride(cpuLimit, spec.Labels, cpuLimitLabel)
 	}
-
-	fmt.Printf("envs: %+#v\n", spec.Envs)
 
 	return &containers.ContainerInfo{
 		Name:      name,

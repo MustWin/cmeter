@@ -2,7 +2,6 @@ package containers
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"sync"
 
@@ -84,7 +83,6 @@ func (registry *Registry) IsTrackable(info *ContainerInfo) bool {
 	}
 
 	if registry.trackingEnvKey != "" {
-		fmt.Printf("key/env: %s  |  %#+v\n", registry.trackingEnvKey, info.Envs)
 		if _, ok := info.Envs[registry.trackingEnvKey]; ok {
 			return true
 		}
