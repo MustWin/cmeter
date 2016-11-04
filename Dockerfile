@@ -1,7 +1,8 @@
 FROM frolvlad/alpine-glibc
 
-COPY ./dist /bin/cmeter
+ENV CMETER_CONFIG_PATH /etc/cmeter.config.yml
 
-WORKDIR /
+COPY ./config.default.yml /etc/cmeter.config.yml
+COPY ./dist /bin/cmeter
 
 ENTRYPOINT ['/bin/cmeter']
