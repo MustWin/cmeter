@@ -1,0 +1,11 @@
+version: 0.1
+
+logging:
+  level: debug
+  formatter: text
+
+tracking:
+  tracking_label: 'cmeter_track'
+
+collector:
+  rate: 5000
