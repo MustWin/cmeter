@@ -5,26 +5,9 @@ import (
 	"net/http"
 )
 
-type MeterBilling struct {
-	Period int64   `json:"period"`
-	Price  float64 `json:"price"`
-	Unit   float64 `json:"unit"`
-}
-
-type AllocationBilling struct {
-	Price float64 `json:"price"`
-	Unit  float64 `json:"unit"`
-}
-
-type BillingModel struct {
-	OrgID       string             `json:"org_id"`
-	CPU         *MeterBilling      `json:"cpu"`
-	CPUAlloc    *AllocationBilling `json:"cpu_alloc"`
-	Memory      *MeterBilling      `json:"memory"`
-	MemoryAlloc *AllocationBilling `json:"memory_alloc"`
-	DiskIO      *AllocationBilling `json:"disk_io"`
-	NetworkRx   *AllocationBilling `json:"net_rx"`
-	NetworkTx   *AllocationBilling `json:"net_tx"`
+type CreateOrgRequest struct {
+	Name          string `json:"name"`
+	BillingPlanID string `json:"billing_plan_id"`
 }
 
 type Org struct {
@@ -52,8 +35,28 @@ type Usage struct {
 	NetworkTxBytes uint64  `json:"net_tx_bytes"`
 }
 
+func (u *Usage) Add(u2 *Usage) *Usage {
+	return &Usage{
+		TotalCPUPerc:   u.TotalCPUPerc + u2.TotalCPUPerc,
+		MemoryBytes:    u.MemoryBytes + u2.MemoryBytes,
+		DiskIOBytes:    u.DiskIOBytes + u2.DiskIOBytes,
+		NetworkRxBytes: u.NetworkRxBytes + u2.NetworkRxBytes,
+		NetworkTxBytes: u.NetworkTxBytes + u2.NetworkTxBytes,
+	}
+}
+
+func (u *Usage) Average(n uint64) *Usage {
+	return &Usage{
+		TotalCPUPerc:   u.TotalCPUPerc / float64(n),
+		MemoryBytes:    u.MemoryBytes / n,
+		DiskIOBytes:    u.DiskIOBytes / n,
+		NetworkRxBytes: u.NetworkRxBytes / n,
+		NetworkTxBytes: u.NetworkTxBytes / n,
+	}
+}
+
 type BlockAlloc struct {
-	MaxCPUPerc  float64 `json:"max_cpu_perc"`
+	CPUShares   float64 `json:"cpu_shares"`
 	MemoryBytes uint64  `json:"memory_bytes"`
 }
 
@@ -78,6 +81,10 @@ type MeterEvent struct {
 	Type      MeterEventType `json:"event_type"`
 	Timestamp int64          `json:"timestamp"`
 	Container *ContainerInfo `json:"container"`
+}
+
+type OrgCreateRequest struct {
+	Name string `json:"name"`
 }
 
 type StartMeterEvent struct {
@@ -124,6 +131,21 @@ type MeterSession struct {
 	Allocated    *BlockAlloc    `json:"allocated"`
 	TotalUsage   *Usage         `json:"total_usage"`
 	AverageUsage *Usage         `json:"average_usage"`
+}
+
+type SessionStateTransition struct {
+	SessionID string       `json:"session_id"`
+	OrgID     string       `json:"org_id"`
+	MeterID   string       `json:"meter_id"`
+	State     SessionState `json:"state"`
+	Timestamp int64        `json:"timestamp"`
+	Allocated *BlockAlloc  `json:"allocated"`
+	Machine   *MachineInfo `json:"machine"`
+}
+
+type SessionRecommendation struct {
+	*MeterSession
+	Recommendation string `json:"recommendation"`
 }
 
 func ServeJSON(w http.ResponseWriter, data interface{}) error {

@@ -43,4 +43,11 @@ var (
 		Description:    "The billing model body was not provided or was invalid. Verify your entity and try your request again.",
 		HTTPStatusCode: http.StatusBadRequest,
 	})
+
+	ErrorCodePlanUnknown = errcode.Register(ErrorGroup, errcode.ErrorDescriptor{
+		Value:          "BILLING_PLAN_UNKNOWN",
+		Message:        "billing plan not known to server",
+		Description:    "This is returned if the billing plan ID used during an operation is unknown to the server.",
+		HTTPStatusCode: http.StatusNotFound,
+	})
 )

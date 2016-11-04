@@ -51,6 +51,21 @@ var (
 		Required:    true,
 	}
 
+	rangeParameters = []describe.ParameterDescriptor{
+		{
+			Name:        "start",
+			Type:        "<timestamp>",
+			Description: "Start of the time range.",
+			Required:    true,
+		},
+		{
+			Name:        "end",
+			Type:        "<timestamp>",
+			Description: "End of the time range.",
+			Required:    true,
+		},
+	}
+
 	jsonContentLengthHeader = describe.ParameterDescriptor{
 		Name:        "Content-Length",
 		Type:        "integer",
@@ -97,6 +112,23 @@ var (
 			ErrorCodeOrgUnknown,
 		},
 	}
+
+	planNotFoundResp = describe.ResponseDescriptor{
+		Name:        "Billing Plan Unknown Error",
+		StatusCode:  http.StatusNotFound,
+		Description: "The billing plan is not known to the server.",
+		Headers: []describe.ParameterDescriptor{
+			versionHeader,
+			jsonContentLengthHeader,
+		},
+		Body: describe.BodyDescriptor{
+			ContentType: "application/json; charset=utf-8",
+			Format:      errorsBody,
+		},
+		ErrorCodes: []errcode.ErrorCode{
+			ErrorCodePlanUnknown,
+		},
+	}
 )
 
 var (
@@ -129,19 +161,45 @@ var (
 	` + apiKeyBody + `, ...
 ]`
 
+	meterBillingPart = `{
+		"period": ...,
+		"price": ...,
+		"unit": ...
+	}`
+
+	allocationBillingPart = `{
+		"price": ...,
+		"unit": ...
+	}`
+
 	billingModelBody = `{
-	"method": <pricing method>,
-	"usage": {
-		"vcpu": <unit cost>,
-		"memory_mb": <unit cost>,
-		"disk_io": <unit cost>,
-		"net_io": <unit cost>
-	}, 
-	"block": {
-		"vcpu": <unit cost>,
-		"memory_mb": <unit cost>
-	}
+	"org_id": ...,
+	"cpu": ` + meterBillingPart + `,
+	"cpu_alloc": ` + allocationBillingPart + `,
+	"memory": ` + meterBillingPart + `,
+	"memory_alloc": ` + allocationBillingPart + `,
+	"disk_io": ` + allocationBillingPart + `,
+	"net_rx": ` + allocationBillingPart + `,
+	"net_tx": ` + allocationBillingPart + `
 }`
+
+	billingPlanBody = `{
+	"id": ...,
+	"name": ...,
+	"description": ...,
+	"cpu": ` + meterBillingPart + `,
+	"cpu_alloc": ` + allocationBillingPart + `,
+	"memory": ` + meterBillingPart + `,
+	"memory_alloc": ` + allocationBillingPart + `,
+	"disk_io": ` + allocationBillingPart + `,
+	"net_rx": ` + allocationBillingPart + `,
+	"net_tx": ` + allocationBillingPart + `
+}`
+
+	billingPlansBody = `[
+	{ "id": ..., "name": ... }
+	, ...
+]`
 )
 
 var APIDescriptor = struct {
@@ -241,14 +299,59 @@ var routeDescriptors = []describe.RouteDescriptor{
 		},
 	},
 	{
-		Name:        RouteNameOrgs,
-		Path:        "/v1/orgs",
-		Entity:      "[]Org",
-		Description: "Base V1 API route, can be used for lightweight health and version check.",
+		Name:        RouteNameDistribution,
+		Path:        "/v1/orgs/distribution",
+		Entity:      "[]DistributionInfo",
+		Description: "API route to view distribution info for all orgs",
 		Methods: []describe.MethodDescriptor{
 			{
 				Method:      "GET",
-				Description: "Get all organizations",
+				Description: "Get all organizations' distribution info within a period of time",
+				Requests: []describe.RequestDescriptor{
+					{
+						Headers: []describe.ParameterDescriptor{
+							hostHeader,
+						},
+
+						QueryParameters: []describe.ParameterDescriptor{
+							rangeParameters[0],
+							rangeParameters[1],
+							{
+								Name:        "period",
+								Type:        "<seconds>",
+								Description: "Timespan size for the distribution partitions.",
+								Required:    true,
+							},
+						},
+
+						Successes: []describe.ResponseDescriptor{
+							{
+								Description: "Distribution info for all organizations returned successfully.",
+								StatusCode:  http.StatusOK,
+								Headers: []describe.ParameterDescriptor{
+									versionHeader,
+									jsonContentLengthHeader,
+								},
+
+								Body: describe.BodyDescriptor{
+									ContentType: "application/json; charset=utf-8",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		Name:        RouteNameOrgs,
+		Path:        "/v1/orgs",
+		Entity:      "[]Org",
+		Description: "API route to view and manage organizations",
+		Methods: []describe.MethodDescriptor{
+			{
+				Method:      "GET",
+				Description: "Get all organizations.",
 				Requests: []describe.RequestDescriptor{
 					{
 						Headers: []describe.ParameterDescriptor{
@@ -267,6 +370,202 @@ var routeDescriptors = []describe.RouteDescriptor{
 								Body: describe.BodyDescriptor{
 									ContentType: "application/json; charset=utf-8",
 									Format:      orgsBody,
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:      "POST",
+				Description: "Create an organization.",
+				Requests: []describe.RequestDescriptor{
+					{
+						Headers: []describe.ParameterDescriptor{
+							hostHeader,
+						},
+
+						Successes: []describe.ResponseDescriptor{
+							{
+								Description: "Organization created",
+								StatusCode:  http.StatusCreated,
+								Headers: []describe.ParameterDescriptor{
+									versionHeader,
+									jsonContentLengthHeader,
+								},
+
+								Body: describe.BodyDescriptor{
+									ContentType: "application/json; charset=utf-8",
+									Format:      orgBody,
+								},
+							},
+						},
+
+						Failures: []describe.ResponseDescriptor{
+							planNotFoundResp,
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		Name:        RouteNameBillingPlans,
+		Path:        "/v1/plans",
+		Entity:      "[]BillingPlan",
+		Description: "API route to view and manage billing plans",
+		Methods: []describe.MethodDescriptor{
+			{
+				Method:      "GET",
+				Description: "List all billing plans",
+				Requests: []describe.RequestDescriptor{
+					{
+						Headers: []describe.ParameterDescriptor{
+							hostHeader,
+						},
+
+						Successes: []describe.ResponseDescriptor{
+							{
+								Description: "All billing plans returned",
+								StatusCode:  http.StatusOK,
+								Headers: []describe.ParameterDescriptor{
+									versionHeader,
+									jsonContentLengthHeader,
+								},
+
+								Body: describe.BodyDescriptor{
+									ContentType: "application/json; charset=utf-8",
+									Format:      billingPlansBody,
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:      "POST",
+				Description: "Create a billing plan.",
+				Requests: []describe.RequestDescriptor{
+					{
+						Headers: []describe.ParameterDescriptor{
+							hostHeader,
+						},
+
+						Successes: []describe.ResponseDescriptor{
+							{
+								Description: "Billing plan created",
+								StatusCode:  http.StatusCreated,
+								Headers: []describe.ParameterDescriptor{
+									versionHeader,
+									jsonContentLengthHeader,
+								},
+
+								Body: describe.BodyDescriptor{
+									ContentType: "application/json; charset=utf-8",
+									Format:      billingPlanBody,
+								},
+							},
+						},
+
+						Failures: []describe.ResponseDescriptor{
+							orgNotFoundResp,
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		Name:        RouteNameBillingPlan,
+		Path:        "/v1/plans/{plan_id:" + IDRegex.String() + "}",
+		Entity:      "BillingPlan",
+		Description: "API route to manage and modify a billing plan",
+		Methods: []describe.MethodDescriptor{
+			{
+				Method:      "PUT",
+				Description: "Update a billing plan",
+				Requests: []describe.RequestDescriptor{
+					{
+						Headers: []describe.ParameterDescriptor{
+							hostHeader,
+						},
+
+						Successes: []describe.ResponseDescriptor{
+							{
+								Description: "Billing plan updated successfully.",
+								StatusCode:  http.StatusOK,
+								Headers: []describe.ParameterDescriptor{
+									versionHeader,
+									jsonContentLengthHeader,
+								},
+
+								Body: describe.BodyDescriptor{
+									ContentType: "application/json; charset=utf-8",
+									Format:      billingPlanBody,
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				Method:      "DELETE",
+				Description: "Remove a billing plan",
+				Requests: []describe.RequestDescriptor{
+					{
+						Headers: []describe.ParameterDescriptor{
+							hostHeader,
+						},
+
+						Successes: []describe.ResponseDescriptor{
+							{
+								Description: "Billing plan removed",
+								StatusCode:  http.StatusNoContent,
+								Headers: []describe.ParameterDescriptor{
+									versionHeader,
+									zeroContentLengthHeader,
+								},
+							},
+						},
+
+						Failures: []describe.ResponseDescriptor{
+							planNotFoundResp,
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		Name:        RouteNameCostSavings,
+		Path:        "/v1/orgs/{org_id:" + IDRegex.String() + "}/cost-savings",
+		Entity:      "[]SessionRecommendation",
+		Description: "Retrieve recommendations on active meter sessions belonging to a specific organization.",
+		Methods: []describe.MethodDescriptor{
+			{
+				Method:      "GET",
+				Description: "Get all session recommendations.",
+				Requests: []describe.RequestDescriptor{
+					{
+						Headers: []describe.ParameterDescriptor{
+							hostHeader,
+						},
+
+						PathParameters: []describe.ParameterDescriptor{
+							orgIDParameter,
+						},
+
+						Successes: []describe.ResponseDescriptor{
+							{
+								Description: "All recommendations returned",
+								StatusCode:  http.StatusOK,
+								Headers: []describe.ParameterDescriptor{
+									jsonContentLengthHeader,
+								},
+
+								Body: describe.BodyDescriptor{
+									ContentType: "application/json; charset=utf-8",
+									Format:      "",
 								},
 							},
 						},
@@ -513,7 +812,7 @@ var routeDescriptors = []describe.RouteDescriptor{
 				},
 			},
 			{
-				Method:      "PUT",
+				Method:      "POST",
 				Description: "Create an API key for an organization.",
 				Requests: []describe.RequestDescriptor{
 					{
@@ -591,7 +890,7 @@ var routeDescriptors = []describe.RouteDescriptor{
 				},
 			},
 			{
-				Method:      "POST",
+				Method:      "PUT",
 				Description: "Modify the billing model for the organization.",
 				Requests: []describe.RequestDescriptor{
 					{

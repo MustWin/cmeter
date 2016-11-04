@@ -5,6 +5,8 @@ import "github.com/gorilla/mux"
 const (
 	RouteNameBase            = "base"
 	RouteNameOrgs            = "orgs"
+	RouteNameBillingPlans    = "billingplans"
+	RouteNameBillingPlan     = "billingplan"
 	RouteNameMeterEvents     = "meterevents"
 	RouteNameMeterSessions   = "metersessions"
 	RouteNameMeterImageNames = "imagenames"
@@ -13,6 +15,8 @@ const (
 	RouteNameAPIKeys         = "apikeys"
 	RouteNameAPIKey          = "apikey"
 	RouteNameBillingModel    = "billingmodel"
+	RouteNameDistribution    = "distribution"
+	RouteNameCostSavings     = "costsavings"
 )
 
 func Router() *mux.Router {
