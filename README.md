@@ -60,7 +60,7 @@ logging:
 # container tracking stuff
 tracking:
   # the label used to determine if a container should be tracked and metered
-  tracking_label: 'com.example.track'
+  label: 'com.example.track'
 
 # stats collection stuff
 collector:

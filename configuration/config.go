@@ -126,8 +126,8 @@ type CollectorConfig struct {
 }
 
 type TrackerConfig struct {
-	TrackingLabel string `yaml:"tracking_label,omitempty"`
-	EnvKey        string `yaml:"env_key,omitempty"`
+	TrackingLabel string `yaml:"label,omitempty"`
+	EnvKey        string `yaml:"env,omitempty"`
 }
 
 type Config struct {

@@ -8,7 +8,7 @@ logging:
 
 
 tracking:
-  tracking_label: 'com.example.track'
+  label: 'com.example.track'
 
 collector:
   rate: 5000
