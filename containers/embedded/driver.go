@@ -2,6 +2,7 @@ package embedded
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -50,6 +51,11 @@ func (factory *driverFactory) Create(parameters map[string]interface{}) (contain
 		return nil, err
 	}
 
+	// override before we instantiate the manager
+	allowedEnvs := getEnvWhiteList(parameters)
+	f := flag.Lookup("docker_env_metadata_whitelist")
+	f.Value.Set(strings.Join(allowedEnvs, ","))
+
 	// Create and start the cAdvisor container manager.
 	m, err := manager.New(memory.New(statsCacheDuration, nil), sysFs, maxHousekeepingInterval, allowDynamicHousekeeping, cadvisorMetrics.MetricSet{cadvisorMetrics.NetworkTcpUsageMetrics: struct{}{}}, http.DefaultClient)
 	if err != nil {
@@ -74,6 +80,25 @@ func (factory *driverFactory) Create(parameters map[string]interface{}) (contain
 	}
 
 	return d, nil
+}
+
+func getEnvWhiteList(parameters map[string]interface{}) []string {
+	if delimited, ok := parameters["envs"].(string); ok {
+		return strings.Split(delimited, ",")
+	}
+
+	if raw, ok := parameters["envs"].([]interface{}); ok {
+		envs := make([]string, 0)
+		for _, e := range raw {
+			if s, ok := e.(string); ok && s != "" {
+				envs = append(envs, s)
+			}
+		}
+
+		return envs
+	}
+
+	return nil
 }
 
 func init() {
@@ -165,12 +190,15 @@ func convertContainerInfo(info v1.ContainerInfo, machine *containers.MachineInfo
 		cpuLimit = maxCpuLimitOverride(cpuLimit, info.Labels, cpuLimitLabel)
 	}
 
+	fmt.Printf("envs: %+#v\n", info.Spec.Envs)
+
 	return &containers.ContainerInfo{
 		Name:      info.Name,
 		ImageName: imageName,
 		ImageTag:  imageTag,
 		Labels:    info.Labels,
 		Machine:   machine,
+		Envs:      info.Spec.Envs,
 		Reserved: &containers.ReservedResources{
 			Cpu:    cpuLimit,
 			Memory: info.Spec.Memory.Limit,
@@ -185,12 +213,15 @@ func convertContainerSpec(name string, spec v2.ContainerSpec, machine *container
 		cpuLimit = maxCpuLimitOverride(cpuLimit, spec.Labels, cpuLimitLabel)
 	}
 
+	fmt.Printf("envs: %+#v\n", spec.Envs)
+
 	return &containers.ContainerInfo{
 		Name:      name,
 		ImageName: imageName,
 		ImageTag:  imageTag,
 		Labels:    spec.Labels,
 		Machine:   machine,
+		Envs:      spec.Envs,
 		Reserved: &containers.ReservedResources{
 			Cpu:    cpuLimit,
 			Memory: spec.Memory.Limit,

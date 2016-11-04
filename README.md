@@ -81,7 +81,10 @@ reporting:
     key_label: 'ctoll_api_key'
 
 # Similar to the reporting driver section
-containers: 'embedded'
+containers:
+  embedded:
+    # whitelist of environment variables allowed to be exposed to cmeter
+    envs: ['WHITELISTED_ENV']
 
 ```
 

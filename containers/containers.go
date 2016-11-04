@@ -57,6 +57,7 @@ type EventsChannel interface {
 type ContainerInfo struct {
 	Name      string             `json:"name"`
 	Labels    map[string]string  `json:"labels"`
+	Envs      map[string]string  `json:"env"`
 	ImageName string             `json:"image_name"`
 	ImageTag  string             `json:"image_tag"`
 	Machine   *MachineInfo       `json:"machine"`

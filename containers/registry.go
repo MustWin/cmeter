@@ -2,6 +2,8 @@ package containers
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/MustWin/cmeter/context"
@@ -10,15 +12,17 @@ import (
 var ErrNotTrackable = errors.New("the registry cannot track this container")
 
 type Registry struct {
-	mutex         sync.Mutex
-	trackingLabel string
-	containers    map[string]*ContainerInfo
+	mutex          sync.Mutex
+	trackingLabel  string
+	trackingEnvKey string
+	containers     map[string]*ContainerInfo
 }
 
-func NewRegistry(trackingLabel string) *Registry {
+func NewRegistry(trackingLabel string, trackingEnvKey string) *Registry {
 	return &Registry{
-		containers:    make(map[string]*ContainerInfo),
-		trackingLabel: trackingLabel,
+		containers:     make(map[string]*ContainerInfo),
+		trackingLabel:  trackingLabel,
+		trackingEnvKey: strings.ToLower(trackingEnvKey),
 	}
 }
 
@@ -73,8 +77,15 @@ func (registry *Registry) Drop(ctx context.Context, containerName string) error 
 }
 
 func (registry *Registry) IsTrackable(info *ContainerInfo) bool {
-	for k, _ := range info.Labels {
-		if k == registry.trackingLabel {
+	if registry.trackingLabel != "" {
+		if _, ok := info.Labels[registry.trackingLabel]; ok {
+			return true
+		}
+	}
+
+	if registry.trackingEnvKey != "" {
+		fmt.Printf("key/env: %s  |  %#+v\n", registry.trackingEnvKey, info.Envs)
+		if _, ok := info.Envs[registry.trackingEnvKey]; ok {
 			return true
 		}
 	}

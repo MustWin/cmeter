@@ -5,7 +5,8 @@ logging:
   formatter: text
 
 tracking:
-  tracking_label: 'cmeter_track'
+  tracking_label: cmeter_track
+  env_key: METER_TRACKING
 
 collector:
   rate: 5000

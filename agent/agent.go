@@ -225,7 +225,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		containers: containersDriver,
 		collector:  collector.New(config.Collector),
 		reporting:  reportingDriver,
-		registry:   containers.NewRegistry(config.Tracking.TrackingLabel),
+		registry:   containers.NewRegistry(config.Tracking.TrackingLabel, config.Tracking.EnvKey),
 	}, nil
 }
 
