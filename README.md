@@ -60,7 +60,9 @@ logging:
 # container tracking stuff
 tracking:
   # the label used to determine if a container should be tracked and metered
-  label: 'com.example.track'
+  label: cmeter_track
+  # the env key looked for on containers to determine if it should be tracked and metered
+  env: METER_TRACKING
 
 # stats collection stuff
 collector:
@@ -85,8 +87,8 @@ containers:
   embedded:
     # container label with the value to override the container cpu limit tracked by cmeter (in milli-cores, e.g: '0.002', '0.1', '2.0')
     cpu_limit_label: 'cpulimit'
-    # whitelist of environment variables allowed to be exposed to cmeter
-    envs: ['WHITELISTED_ENV']
+    # whitelist of environment variables exposed to cmeter
+    envs: ['METER_TRACKING']
 
 ```
 
