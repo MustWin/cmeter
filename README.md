@@ -18,6 +18,21 @@ cMeter (Container Meter) provides container hosts with a container metering solu
 
 > $ cmeter agent ./config.dev.yml
 
+With Docker:
+
+```
+sudo docker run \
+  --volume=/:/rootfs:ro \
+  --volume=/var/run:/var/run:rw \
+  --volume=/sys:/sys:ro \
+  --volume=/var/lib/docker/:/var/lib/docker:ro \
+  --env CMETER_REPORTING=http \
+  --env CMETER_CONTAINERS=embedded \
+  --detach=true \
+  --name=cmeter \
+  containeropsco/cmeter:latest
+```
+
 
 ## Configuration
 
