@@ -69,6 +69,7 @@ type Driver interface {
 	GetContainers(ctx context.Context) ([]*ContainerInfo, error)
 	GetContainer(ctx context.Context, name string) (*ContainerInfo, error)
 	GetContainerStats(ctx context.Context, name string) (StatsChannel, error)
+	GetMachineStats(ctx context.Context) (MachineStatsFeed, error)
 	CloseAllChannels(ctx context.Context) error
 }
 

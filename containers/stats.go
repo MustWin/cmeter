@@ -32,8 +32,18 @@ type Stats struct {
 	Disk    *DiskStats    `json:"disk,omitempty"`
 }
 
+type MachineStats struct {
+	Cpu    *CpuStats    `json:"cpu,omitempty"`
+	Memory *MemoryStats `json"memory,omitempty"`
+}
+
 type StatsChannel interface {
 	Container() *ContainerInfo
 	GetChannel() <-chan *Stats
 	Close() error
+}
+
+type MachineStatsFeed interface {
+	Machine() *MachineInfo
+	Next() *MachineStats
 }

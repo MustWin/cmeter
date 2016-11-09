@@ -62,6 +62,33 @@ func (ch *statsChannel) Close() error {
 	return nil
 }
 
+type machineStatsFeed struct {
+	machine *containers.MachineInfo
+	root    *containers.ContainerInfo
+	manager manager.Manager
+}
+
+func (ch *machineStatsFeed) Next() *containers.MachineStats {
+	ci, err := ch.manager.GetContainerInfo(ch.root.Name, &v1.ContainerInfoRequest{NumStats: 1})
+	if err == nil && ci != nil && len(ci.Stats) > 0 {
+		return convertContainerInfoToMachineStats(ci.Stats[0])
+	}
+
+	return nil
+}
+
+func (ch *machineStatsFeed) Machine() *containers.MachineInfo {
+	return ch.machine
+}
+
+func newMachineStatsFeed(manager manager.Manager, machine *containers.MachineInfo, root *containers.ContainerInfo) *machineStatsFeed {
+	return &machineStatsFeed{
+		manager: manager,
+		root:    root,
+		machine: machine,
+	}
+}
+
 func newStatsChannel(manager manager.Manager, container *containers.ContainerInfo) *statsChannel {
 	return &statsChannel{
 		manager:   manager,
@@ -75,6 +102,14 @@ func newStatsChannel(manager manager.Manager, container *containers.ContainerInf
 func calculateCpuUsage(nanoCpuTime uint64, numCores uint64) float64 {
 	// https://github.com/kubernetes/heapster/issues/650
 	return float64(nanoCpuTime) / float64(numCores*1e+9)
+}
+
+func convertContainerInfoToMachineStats(stats *v1.ContainerStats) *containers.MachineStats {
+	cs := convertContainerInfoToStats(stats)
+	return &containers.MachineStats{
+		Cpu:    cs.Cpu,
+		Memory: cs.Memory,
+	}
 }
 
 func convertContainerInfoToStats(stats *v1.ContainerStats) *containers.Stats {

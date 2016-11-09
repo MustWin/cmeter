@@ -23,6 +23,8 @@ type Agent struct {
 
 	collector *collector.Collector
 
+	hostCollector *collector.HostCollector
+
 	containers containers.Driver
 
 	registry *containers.Registry
@@ -39,14 +41,21 @@ func (agent *Agent) Run() error {
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 	go agent.ProcessSamples(wg)
+	go agent.ProcessHostSamples(wg)
 	go agent.ProcessEvents(wg)
 	wg.Wait()
 	return nil
 }
 
 func (agent *Agent) InitializeContainers() error {
+	feed, err := agent.containers.GetMachineStats(agent)
+	if err != nil {
+		return err
+	}
+
+	agent.hostCollector = collector.NewHost(agent, feed, agent.config.Collector)
 	active, err := agent.containers.GetContainers(agent)
 	if err != nil {
 		return err
@@ -67,6 +76,25 @@ func (agent *Agent) InitializeContainers() error {
 	}
 
 	return nil
+}
+
+// TODO: break-out
+func (agent *Agent) ProcessHostSamples(wg sync.WaitGroup) {
+	defer wg.Done()
+
+	context.GetLogger(agent).Info("machine stats processor started")
+	defer context.GetLogger(agent).Info("machine stats processor stopped")
+	for sample := range agent.hostCollector.GetChannel() {
+		e := reporting.Generate(agent, reporting.EventMachineStatSample, sample)
+		go func() {
+			_, err := agent.reporting.Report(agent, e)
+			if err != nil {
+				context.GetLogger(agent).Errorf("error reporting machine stats: %v", err)
+			} else {
+				context.GetLogger(agent).Debug("machine stats reported")
+			}
+		}()
+	}
 }
 
 // TODO: break-out
@@ -91,6 +119,14 @@ func (agent *Agent) ProcessStateChange(c *containers.StateChange, registered boo
 			context.GetLogger(agent).Errorf("error stopping container stats collection: %v", err)
 			return
 		}
+
+		if agent.collector.Num() <= 0 && agent.hostCollector.Active() {
+			context.GetLogger(agent).Info("no containers tracked, halting machine stats collection")
+			if err := agent.hostCollector.Stop(); err != nil {
+				context.GetLogger(agent).Errorf("error stopping machine stats collection: %v", err)
+				return
+			}
+		}
 	} else {
 		ch, err := agent.containers.GetContainerStats(agent, c.Container.Name)
 		if err != nil {
@@ -99,6 +135,13 @@ func (agent *Agent) ProcessStateChange(c *containers.StateChange, registered boo
 		} else if err = agent.collector.Collect(agent, ch); err != nil {
 			context.GetLogger(agent).Errorf("error starting container stats collection: %v", err)
 			return
+		}
+
+		if agent.collector.Num() > 0 && !agent.hostCollector.Active() {
+			if err = agent.hostCollector.Start(); err != nil {
+				context.GetLogger(agent).Errorf("error starting machine stats collection: %v", err)
+				return
+			}
 		}
 	}
 
@@ -227,8 +270,9 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		config:     config,
 		containers: containersDriver,
 		collector:  collector.New(config.Collector),
-		reporting:  reportingDriver,
-		registry:   containers.NewRegistry(config.Tracking.TrackingLabel, config.Tracking.EnvKey),
+		//hostCollector: collector.NewHostCollector(config.Collector),
+		reporting: reportingDriver,
+		registry:  containers.NewRegistry(config.Tracking.TrackingLabel, config.Tracking.EnvKey),
 	}, nil
 }
 

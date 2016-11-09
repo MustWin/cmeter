@@ -270,3 +270,12 @@ func (d *driver) CloseAllChannels(ctx context.Context) error {
 	// TODO: determine need and complete
 	return nil
 }
+
+func (d *driver) GetMachineStats(ctx context.Context) (containers.MachineStatsFeed, error) {
+	root, err := d.GetContainer(ctx, "/")
+	if err != nil {
+		return nil, err
+	}
+
+	return newMachineStatsFeed(d.manager, d.machine, root), nil
+}

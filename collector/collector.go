@@ -32,6 +32,19 @@ type Sample struct {
 	Stats     *containers.Stats         `json:"stats"`
 }
 
+type HostSample struct {
+	Timestamp int64                    `json:"timestamp"`
+	FrameSize time.Duration            `json:"rate"`
+	Machine   *containers.MachineInfo  `json:"machine"`
+	Stats     *containers.MachineStats `json:"stats"`
+}
+
+func (c *Collector) Num() int {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	return len(c.collections)
+}
+
 func (c *Collector) Collect(ctx context.Context, ch containers.StatsChannel) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -115,5 +128,82 @@ func New(config configuration.CollectorConfig) *Collector {
 	return &Collector{
 		Rate:    time.Duration(config.Rate) * time.Millisecond,
 		samples: make(chan *Sample, CHANNEL_BUFFER_SIZE),
+	}
+}
+
+type HostCollector struct {
+	context.Context
+	feed    containers.MachineStatsFeed
+	Rate    time.Duration
+	active  bool
+	mutex   sync.Mutex
+	samples chan *HostSample
+}
+
+func NewHost(ctx context.Context, feed containers.MachineStatsFeed, config configuration.CollectorConfig) *HostCollector {
+	return &HostCollector{
+		Context: ctx,
+		Rate:    time.Duration(config.Rate) * time.Millisecond,
+		feed:    feed,
+		active:  false,
+		samples: make(chan *HostSample, CHANNEL_BUFFER_SIZE),
+	}
+}
+
+func (c *HostCollector) Active() bool {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	return c.active
+}
+
+func (c *HostCollector) Start() error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	if c.active {
+		return fmt.Errorf("machine stats collector already started")
+	}
+
+	c.active = true
+	go c.doCollect()
+	context.GetLogger(c).Info("started machine stats collection")
+	return nil
+}
+
+func (c *HostCollector) GetChannel() <-chan *HostSample {
+	return c.samples
+}
+
+func (c *HostCollector) Stop() error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	c.active = false
+	context.GetLogger(c).Info("stopped machine stats collection")
+	return nil
+}
+
+func (c *HostCollector) doCollect() {
+	t := time.NewTicker(c.Rate)
+	for _ = range t.C {
+		if !c.Active() {
+			t.Stop()
+			return
+		}
+
+		metrics := c.feed.Next()
+		if metrics == nil {
+			context.GetLogger(c).Error("couldn't sample machine stats")
+			continue
+		}
+
+		sample := &HostSample{
+			Machine:   c.feed.Machine(),
+			Stats:     metrics,
+			FrameSize: c.Rate,
+			Timestamp: time.Now().Unix(),
+		}
+
+		c.samples <- sample
 	}
 }
