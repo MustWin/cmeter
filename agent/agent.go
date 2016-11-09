@@ -84,6 +84,12 @@ func (agent *Agent) ProcessHostSamples(wg sync.WaitGroup) {
 
 	context.GetLogger(agent).Info("machine stats processor started")
 	defer context.GetLogger(agent).Info("machine stats processor stopped")
+
+	if err := agent.hostCollector.Start(); err != nil {
+		context.GetLogger(agent).Errorf("error starting machine stats collection: %v", err)
+		return
+	}
+
 	for sample := range agent.hostCollector.GetChannel() {
 		e := reporting.Generate(agent, reporting.EventMachineStatSample, sample)
 		go func() {
@@ -119,14 +125,6 @@ func (agent *Agent) ProcessStateChange(c *containers.StateChange, registered boo
 			context.GetLogger(agent).Errorf("error stopping container stats collection: %v", err)
 			return
 		}
-
-		if agent.collector.Num() <= 0 && agent.hostCollector.Active() {
-			context.GetLogger(agent).Info("no containers tracked, halting machine stats collection")
-			if err := agent.hostCollector.Stop(); err != nil {
-				context.GetLogger(agent).Errorf("error stopping machine stats collection: %v", err)
-				return
-			}
-		}
 	} else {
 		ch, err := agent.containers.GetContainerStats(agent, c.Container.Name)
 		if err != nil {
@@ -135,13 +133,6 @@ func (agent *Agent) ProcessStateChange(c *containers.StateChange, registered boo
 		} else if err = agent.collector.Collect(agent, ch); err != nil {
 			context.GetLogger(agent).Errorf("error starting container stats collection: %v", err)
 			return
-		}
-
-		if agent.collector.Num() > 0 && !agent.hostCollector.Active() {
-			if err = agent.hostCollector.Start(); err != nil {
-				context.GetLogger(agent).Errorf("error starting machine stats collection: %v", err)
-				return
-			}
 		}
 	}
 
