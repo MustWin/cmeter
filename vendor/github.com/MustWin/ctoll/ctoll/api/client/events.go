@@ -49,6 +49,16 @@ func (c *meterEventClient) sendMeterEvent(apiKey string, body []byte) ([]byte, e
 	return buf, err
 }
 
+func (c *meterEventClient) SendMachineUsageSample(apiKey string, e v1.MachineSampleMeterEvent) error {
+	body, err := json.Marshal(e)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.sendMeterEvent(apiKey, body)
+	return err
+}
+
 func (c *meterEventClient) SendUsageSample(apiKey string, e v1.SampleMeterEvent) error {
 	body, err := json.Marshal(e)
 	if err != nil {
