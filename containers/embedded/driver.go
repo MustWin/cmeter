@@ -2,6 +2,7 @@ package embedded
 
 import (
 	"flag"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,7 +22,10 @@ import (
 	"github.com/MustWin/cmeter/context"
 )
 
-var parseOnce sync.Once
+var (
+	parseOnce sync.Once
+	terabyte  uint64
+)
 
 const (
 	statsCacheDuration          = 2 * time.Minute
@@ -33,6 +37,8 @@ const (
 )
 
 func init() {
+	terabyte = uint64(math.Pow(1024, 4))
+
 	factory.Register("embedded", &driverFactory{})
 }
 
@@ -173,6 +179,15 @@ func maxCpuLimitOverride(limit float64, labels map[string]string, limitLabel str
 	return f
 }
 
+func normalizeMemoryLimit(limit uint64) uint64 {
+	// unreasonably high amount of memory allowance, assume unbounded
+	if limit >= terabyte {
+		return 0
+	}
+
+	return limit
+}
+
 func convertMachineInfo(info *v1.MachineInfo) *containers.MachineInfo {
 	return &containers.MachineInfo{
 		SystemUuid:      info.SystemUUID,
@@ -198,7 +213,7 @@ func convertContainerInfo(info v1.ContainerInfo, machine *containers.MachineInfo
 		Envs:      info.Spec.Envs,
 		Reserved: &containers.ReservedResources{
 			Cpu:    cpuLimit,
-			Memory: info.Spec.Memory.Limit,
+			Memory: normalizeMemoryLimit(info.Spec.Memory.Limit),
 		},
 	}
 }
@@ -219,7 +234,7 @@ func convertContainerSpec(name string, spec v2.ContainerSpec, machine *container
 		Envs:      spec.Envs,
 		Reserved: &containers.ReservedResources{
 			Cpu:    cpuLimit,
-			Memory: spec.Memory.Limit,
+			Memory: normalizeMemoryLimit(spec.Memory.Limit),
 		},
 	}
 }
