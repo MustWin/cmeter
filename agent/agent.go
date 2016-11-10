@@ -91,7 +91,7 @@ func (agent *Agent) ProcessHostSamples(wg sync.WaitGroup) {
 	}
 
 	for sample := range agent.hostCollector.GetChannel() {
-		e := reporting.Generate(agent, reporting.EventMachineStatSample, sample)
+		e := reporting.Generate(agent, reporting.EventMachineSample, sample)
 		go func() {
 			_, err := agent.reporting.Report(agent, e)
 			if err != nil {
