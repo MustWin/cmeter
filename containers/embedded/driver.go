@@ -256,7 +256,7 @@ func (d *driver) GetContainers(ctx context.Context) ([]*containers.ContainerInfo
 
 func (d *driver) GetContainer(ctx context.Context, name string) (*containers.ContainerInfo, error) {
 	specMap, err := d.manager.GetContainerSpec(name, v2.RequestOptions{
-		IdType:    "name",
+		IdType:    v2.TypeName,
 		Count:     0,
 		Recursive: false,
 	})

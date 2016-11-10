@@ -179,7 +179,7 @@ func (agent *Agent) ProcessEvents(wg sync.WaitGroup) {
 			c, err = agent.containers.GetContainer(agent, event.Container.Name)
 			if err != nil {
 				if err == containers.ErrContainerNotFound {
-					context.GetLogger(agent).Warnf("event container info for %q not available", event.Container.Name)
+					context.GetLogger(agent).Warnf("info for container %q not available", event.Container.Name)
 				} else {
 					context.GetLogger(agent).Errorf("error getting event container info: %v", err)
 				}
