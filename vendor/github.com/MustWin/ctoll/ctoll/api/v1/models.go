@@ -27,6 +27,11 @@ type MachineInfo struct {
 	CpuFrequencyKhz uint64 `json:"cpu_frequency_khz"`
 }
 
+type MachineUsage struct {
+	CPUShares   float64 `json:"cpu_shares"`
+	MemoryBytes uint64  `json:"memory_bytes"`
+}
+
 type Usage struct {
 	TotalCPUPerc   float64 `json:"total_cpu_perc"`
 	MemoryBytes    uint64  `json:"memory_bytes"`
@@ -71,16 +76,16 @@ type ContainerInfo struct {
 type MeterEventType string
 
 var (
-	MeterEventTypeStart  MeterEventType = "start"
-	MeterEventTypeStop   MeterEventType = "stop"
-	MeterEventTypeSample MeterEventType = "sample"
+	MeterEventTypeStart         MeterEventType = "start"
+	MeterEventTypeStop          MeterEventType = "stop"
+	MeterEventTypeSample        MeterEventType = "sample"
+	MeterEventTypeMachineSample MeterEventType = "machine_sample"
 )
 
 type MeterEvent struct {
 	MeterID   string         `json:"meter_id"`
 	Type      MeterEventType `json:"event_type"`
 	Timestamp int64          `json:"timestamp"`
-	Container *ContainerInfo `json:"container"`
 }
 
 type OrgCreateRequest struct {
@@ -89,16 +94,25 @@ type OrgCreateRequest struct {
 
 type StartMeterEvent struct {
 	*MeterEvent
-	Allocated *BlockAlloc `json:"allocated"`
+	Container *ContainerInfo `json:"container"`
+	Allocated *BlockAlloc    `json:"allocated"`
 }
 
 type StopMeterEvent struct {
 	*MeterEvent
+	Container *ContainerInfo `json:"container"`
 }
 
 type SampleMeterEvent struct {
 	*MeterEvent
-	Usage *Usage `json:"usage"`
+	Container *ContainerInfo `json:"container"`
+	Usage     *Usage         `json:"usage"`
+}
+
+type MachineSampleMeterEvent struct {
+	*MeterEvent
+	Machine *MachineInfo  `json:"machine"`
+	Usage   *MachineUsage `json:"usage"`
 }
 
 type SessionState string
