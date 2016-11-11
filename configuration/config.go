@@ -131,7 +131,7 @@ type TrackerConfig struct {
 }
 
 type Config struct {
-	Log        LogConfig       `yaml:"logging"`
+	Log        LogConfig       `yaml:"log"`
 	Containers Driver          `yaml:"containers"`
 	Reporting  Driver          `yaml:"reporting"`
 	Collector  CollectorConfig `yaml:"collector"`

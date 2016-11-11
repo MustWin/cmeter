@@ -48,7 +48,7 @@ A development configuration file is included: `/config.dev.yml` and a `/config.l
 version: 0.1
 
 # log stuff
-logging:
+log:
   # minimum event level to log: `error`, `warn`, `info`, or `debug`
   level: 'debug'
   # log output format: `text` or `json`

@@ -1,6 +1,6 @@
 version: 0.1
 
-logging:
+log:
   level: debug
   formatter: text
 
