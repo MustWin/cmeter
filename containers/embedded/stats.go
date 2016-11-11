@@ -10,20 +10,20 @@ import (
 	"github.com/MustWin/cmeter/containers"
 )
 
-type statsChannel struct {
+type usageChannel struct {
 	startFetch sync.Once
 	manager    manager.Manager
 	container  *containers.ContainerInfo
-	ch         chan *containers.Stats
+	ch         chan *containers.Usage
 	doneCh     chan bool
 	closed     bool
 }
 
-func (ch *statsChannel) Container() *containers.ContainerInfo {
+func (ch *usageChannel) Container() *containers.ContainerInfo {
 	return ch.container
 }
 
-func (ch *statsChannel) GetChannel() <-chan *containers.Stats {
+func (ch *usageChannel) GetChannel() <-chan *containers.Usage {
 	ch.startFetch.Do(func() {
 		go ch.startChannel()
 	})
@@ -31,7 +31,7 @@ func (ch *statsChannel) GetChannel() <-chan *containers.Stats {
 	return ch.ch
 }
 
-func (ch *statsChannel) startChannel() {
+func (ch *usageChannel) startChannel() {
 	defer close(ch.ch)
 	for {
 		select {
@@ -49,7 +49,7 @@ func (ch *statsChannel) startChannel() {
 	}
 }
 
-func (ch *statsChannel) Close() error {
+func (ch *usageChannel) Close() error {
 	select {
 	case _, ok := <-ch.doneCh:
 		if !ok {
@@ -62,39 +62,39 @@ func (ch *statsChannel) Close() error {
 	return nil
 }
 
-type machineStatsFeed struct {
+type machineUsageFeed struct {
 	machine *containers.MachineInfo
 	root    *containers.ContainerInfo
 	manager manager.Manager
 }
 
-func (ch *machineStatsFeed) Next() *containers.MachineStats {
+func (ch *machineUsageFeed) Next() *containers.MachineUsage {
 	ci, err := ch.manager.GetContainerInfo(ch.root.Name, &v1.ContainerInfoRequest{NumStats: 1})
 	if err == nil && ci != nil && len(ci.Stats) > 0 {
-		return convertContainerInfoToMachineStats(ci.Stats[0])
+		return convertContainerInfoToMachineUsage(ci.Stats[0])
 	}
 
 	return nil
 }
 
-func (ch *machineStatsFeed) Machine() *containers.MachineInfo {
+func (ch *machineUsageFeed) Machine() *containers.MachineInfo {
 	return ch.machine
 }
 
-func newMachineStatsFeed(manager manager.Manager, machine *containers.MachineInfo, root *containers.ContainerInfo) *machineStatsFeed {
-	return &machineStatsFeed{
+func newMachineUsageFeed(manager manager.Manager, machine *containers.MachineInfo, root *containers.ContainerInfo) *machineUsageFeed {
+	return &machineUsageFeed{
 		manager: manager,
 		root:    root,
 		machine: machine,
 	}
 }
 
-func newStatsChannel(manager manager.Manager, container *containers.ContainerInfo) *statsChannel {
-	return &statsChannel{
+func newUsageChannel(manager manager.Manager, container *containers.ContainerInfo) *usageChannel {
+	return &usageChannel{
 		manager:   manager,
 		container: container,
 		closed:    false,
-		ch:        make(chan *containers.Stats),
+		ch:        make(chan *containers.Usage),
 		doneCh:    make(chan bool),
 	}
 }
@@ -104,21 +104,21 @@ func calculateCpuUsage(nanoCpuTime uint64, numCores uint64) float64 {
 	return float64(nanoCpuTime) / float64(numCores*1e+9)
 }
 
-func convertContainerInfoToMachineStats(stats *v1.ContainerStats) *containers.MachineStats {
+func convertContainerInfoToMachineUsage(stats *v1.ContainerStats) *containers.MachineUsage {
 	cs := convertContainerInfoToStats(stats)
-	return &containers.MachineStats{
+	return &containers.MachineUsage{
 		Cpu:    cs.Cpu,
 		Memory: cs.Memory,
 	}
 }
 
-func convertContainerInfoToStats(stats *v1.ContainerStats) *containers.Stats {
-	cpu := &containers.CpuStats{
-		TotalUsage:   stats.Cpu.Usage.Total,
-		PerCoreUsage: stats.Cpu.Usage.PerCpu[:],
+func convertContainerInfoToStats(stats *v1.ContainerStats) *containers.Usage {
+	cpu := &containers.CpuUsage{
+		Total:   stats.Cpu.Usage.Total,
+		PerCore: stats.Cpu.Usage.PerCpu[:],
 	}
 
-	disk := &containers.DiskStats{
+	disk := &containers.DiskUsage{
 		PerDiskIo: make([]uint64, 0),
 	}
 
@@ -131,23 +131,23 @@ func convertContainerInfoToStats(stats *v1.ContainerStats) *containers.Stats {
 		disk.PerDiskIo = append(disk.PerDiskIo, total)
 	}
 
-	net := &containers.NetworkStats{
+	net := &containers.NetworkUsage{
 		TotalRxBytes: stats.Network.RxBytes,
 		TotalTxBytes: stats.Network.TxBytes,
-		Interfaces:   make([]*containers.InterfaceStats, 0),
+		Interfaces:   make([]*containers.InterfaceUsage, 0),
 	}
 
 	for _, nic := range stats.Network.Interfaces {
-		net.Interfaces = append(net.Interfaces, &containers.InterfaceStats{
+		net.Interfaces = append(net.Interfaces, &containers.InterfaceUsage{
 			Name:    nic.Name,
 			RxBytes: nic.RxBytes,
 			TxBytes: nic.TxBytes,
 		})
 	}
 
-	return &containers.Stats{
+	return &containers.Usage{
 		Cpu:     cpu,
-		Memory:  &containers.MemoryStats{Usage: stats.Memory.Usage},
+		Memory:  &containers.MemoryUsage{Bytes: stats.Memory.Usage},
 		Disk:    disk,
 		Network: net,
 	}

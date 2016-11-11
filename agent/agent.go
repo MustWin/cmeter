@@ -23,7 +23,7 @@ type Agent struct {
 
 	collector *collector.Collector
 
-	hostCollector *collector.HostCollector
+	machineCollector *collector.MachineCollector
 
 	containers containers.Driver
 
@@ -50,12 +50,12 @@ func (agent *Agent) Run() error {
 }
 
 func (agent *Agent) InitializeContainers() error {
-	feed, err := agent.containers.GetMachineStats(agent)
+	feed, err := agent.containers.GetMachineUsage(agent)
 	if err != nil {
 		return err
 	}
 
-	agent.hostCollector = collector.NewHost(agent, feed, agent.config.Collector)
+	agent.machineCollector = collector.NewMachine(agent, feed, agent.config.Collector)
 	active, err := agent.containers.GetContainers(agent)
 	if err != nil {
 		return err
@@ -82,22 +82,22 @@ func (agent *Agent) InitializeContainers() error {
 func (agent *Agent) ProcessHostSamples(wg sync.WaitGroup) {
 	defer wg.Done()
 
-	context.GetLogger(agent).Info("machine stats processor started")
-	defer context.GetLogger(agent).Info("machine stats processor stopped")
+	context.GetLogger(agent).Info("machine usage processor started")
+	defer context.GetLogger(agent).Info("machine usage processor stopped")
 
-	if err := agent.hostCollector.Start(); err != nil {
-		context.GetLogger(agent).Errorf("error starting machine stats collection: %v", err)
+	if err := agent.machineCollector.Start(); err != nil {
+		context.GetLogger(agent).Errorf("error starting machine usage collection: %v", err)
 		return
 	}
 
-	for sample := range agent.hostCollector.GetChannel() {
+	for sample := range agent.machineCollector.GetChannel() {
 		e := reporting.Generate(agent, reporting.EventMachineSample, sample)
 		go func() {
 			_, err := agent.reporting.Report(agent, e)
 			if err != nil {
-				context.GetLogger(agent).Errorf("error reporting machine stats: %v", err)
+				context.GetLogger(agent).Errorf("error reporting machine usage: %v", err)
 			} else {
-				context.GetLogger(agent).Debug("machine stats reported")
+				context.GetLogger(agent).Debug("machine usage reported")
 			}
 		}()
 	}
@@ -122,16 +122,16 @@ func (agent *Agent) ProcessStateChange(c *containers.StateChange, registered boo
 		}
 
 		if _, err := agent.collector.Stop(agent, c.Container); err != nil {
-			context.GetLogger(agent).Errorf("error stopping container stats collection: %v", err)
+			context.GetLogger(agent).Errorf("error stopping container usage collection: %v", err)
 			return
 		}
 	} else {
-		ch, err := agent.containers.GetContainerStats(agent, c.Container.Name)
+		ch, err := agent.containers.GetContainerUsage(agent, c.Container.Name)
 		if err != nil {
-			context.GetLogger(agent).Errorf("error opening stats channel: %v", err)
+			context.GetLogger(agent).Errorf("error opening usage channel: %v", err)
 			return
 		} else if err = agent.collector.Collect(agent, ch); err != nil {
-			context.GetLogger(agent).Errorf("error starting container stats collection: %v", err)
+			context.GetLogger(agent).Errorf("error starting container usage collection: %v", err)
 			return
 		}
 	}
@@ -261,7 +261,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		config:     config,
 		containers: containersDriver,
 		collector:  collector.New(config.Collector),
-		//hostCollector: collector.NewHostCollector(config.Collector),
+		//machineCollector: collector.NewMachineCollector(config.Collector),
 		reporting: reportingDriver,
 		registry:  containers.NewRegistry(config.Tracking.TrackingLabel, config.Tracking.EnvKey),
 	}, nil

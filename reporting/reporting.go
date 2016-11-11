@@ -18,9 +18,9 @@ type Event struct {
 }
 
 var (
-	EventSample        = "stat_sample"
+	EventSample        = "usage_sample"
 	EventStateChange   = "state_change"
-	EventMachineSample = "machine_stat_sample"
+	EventMachineSample = "machine_usage_sample"
 )
 
 type Driver interface {

@@ -68,8 +68,8 @@ type Driver interface {
 	WatchEvents(ctx context.Context, types ...EventType) (EventsChannel, error)
 	GetContainers(ctx context.Context) ([]*ContainerInfo, error)
 	GetContainer(ctx context.Context, name string) (*ContainerInfo, error)
-	GetContainerStats(ctx context.Context, name string) (StatsChannel, error)
-	GetMachineStats(ctx context.Context) (MachineStatsFeed, error)
+	GetContainerUsage(ctx context.Context, name string) (UsageChannel, error)
+	GetMachineUsage(ctx context.Context) (MachineUsageFeed, error)
 	CloseAllChannels(ctx context.Context) error
 }
 

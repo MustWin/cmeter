@@ -63,13 +63,13 @@ func sumOf(values ...uint64) uint64 {
 	return sum
 }
 
-func calculateUsage(stats *containers.Stats) *v1.Usage {
+func calculateUsage(usage *containers.Usage) *v1.Usage {
 	return &v1.Usage{
-		TotalCPUPerc:   float64(stats.Cpu.TotalUsage),
-		MemoryBytes:    stats.Memory.Usage,
-		DiskIOBytes:    sumOf(stats.Disk.PerDiskIo...),
-		NetworkRxBytes: stats.Network.TotalRxBytes,
-		NetworkTxBytes: stats.Network.TotalTxBytes,
+		TotalCPUPerc:   float64(usage.Cpu.Total),
+		MemoryBytes:    usage.Memory.Bytes,
+		DiskIOBytes:    sumOf(usage.Disk.PerDiskIo...),
+		NetworkRxBytes: usage.Network.TotalRxBytes,
+		NetworkTxBytes: usage.Network.TotalTxBytes,
 	}
 }
 
@@ -129,7 +129,7 @@ func (d *Driver) sendMeterSample(me *v1.MeterEvent, s *collector.Sample) ([]byte
 
 	e := v1.SampleMeterEvent{
 		MeterEvent: me,
-		Usage:      calculateUsage(s.Stats),
+		Usage:      calculateUsage(s.Usage),
 	}
 
 	key := d.apiKeyFromLabel(s.Container.Labels)

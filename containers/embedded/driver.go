@@ -272,13 +272,13 @@ func (d *driver) GetContainer(ctx context.Context, name string) (*containers.Con
 	return convertContainerSpec(name, specMap[name], d.machine, d.cpuLimitLabel), nil
 }
 
-func (d *driver) GetContainerStats(ctx context.Context, name string) (containers.StatsChannel, error) {
+func (d *driver) GetContainerUsage(ctx context.Context, name string) (containers.UsageChannel, error) {
 	container, err := d.GetContainer(ctx, name)
 	if err != nil {
 		return nil, err
 	}
 
-	return newStatsChannel(d.manager, container), nil
+	return newUsageChannel(d.manager, container), nil
 }
 
 func (d *driver) CloseAllChannels(ctx context.Context) error {
@@ -286,11 +286,11 @@ func (d *driver) CloseAllChannels(ctx context.Context) error {
 	return nil
 }
 
-func (d *driver) GetMachineStats(ctx context.Context) (containers.MachineStatsFeed, error) {
+func (d *driver) GetMachineUsage(ctx context.Context) (containers.MachineUsageFeed, error) {
 	root, err := d.GetContainer(ctx, "/")
 	if err != nil {
 		return nil, err
 	}
 
-	return newMachineStatsFeed(d.manager, d.machine, root), nil
+	return newMachineUsageFeed(d.manager, d.machine, root), nil
 }

@@ -13,7 +13,7 @@ import (
 const CHANNEL_BUFFER_SIZE = 3000
 
 type collectorData struct {
-	ch     containers.StatsChannel
+	ch     containers.UsageChannel
 	ticker *time.Ticker
 }
 
@@ -29,14 +29,14 @@ type Sample struct {
 	Timestamp int64                     `json:"timestamp"`
 	FrameSize time.Duration             `json:"rate"`
 	Container *containers.ContainerInfo `json:"container"`
-	Stats     *containers.Stats         `json:"stats"`
+	Usage     *containers.Usage         `json:"usage"`
 }
 
-type HostSample struct {
+type MachineSample struct {
 	Timestamp int64                    `json:"timestamp"`
 	FrameSize time.Duration            `json:"rate"`
 	Machine   *containers.MachineInfo  `json:"machine"`
-	Stats     *containers.MachineStats `json:"stats"`
+	Usage     *containers.MachineUsage `json:"usage"`
 }
 
 func (c *Collector) Num() int {
@@ -45,7 +45,7 @@ func (c *Collector) Num() int {
 	return len(c.collections)
 }
 
-func (c *Collector) Collect(ctx context.Context, ch containers.StatsChannel) error {
+func (c *Collector) Collect(ctx context.Context, ch containers.UsageChannel) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -73,7 +73,7 @@ func (c *Collector) GetChannel() <-chan *Sample {
 func (c *Collector) doCollect(ctx context.Context, data *collectorData) {
 	for _ = range data.ticker.C {
 		select {
-		case metrics, ok := <-data.ch.GetChannel():
+		case usage, ok := <-data.ch.GetChannel():
 			if !ok {
 				defer context.GetLogger(ctx).Info("container stats collection completed")
 				if _, err := c.Stop(ctx, data.ch.Container()); err != nil {
@@ -84,7 +84,7 @@ func (c *Collector) doCollect(ctx context.Context, data *collectorData) {
 			} else {
 				sample := &Sample{
 					Container: data.ch.Container(),
-					Stats:     metrics,
+					Usage:     usage,
 					Timestamp: time.Now().Unix(),
 					FrameSize: c.Rate,
 				}
@@ -95,7 +95,7 @@ func (c *Collector) doCollect(ctx context.Context, data *collectorData) {
 	}
 }
 
-func (c *Collector) Stop(ctx context.Context, container *containers.ContainerInfo) (containers.StatsChannel, error) {
+func (c *Collector) Stop(ctx context.Context, container *containers.ContainerInfo) (containers.UsageChannel, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -110,11 +110,11 @@ func (c *Collector) Stop(ctx context.Context, container *containers.ContainerInf
 	return data.ch, nil
 }
 
-func (c *Collector) StopAll() ([]containers.StatsChannel, error) {
+func (c *Collector) StopAll() ([]containers.UsageChannel, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	channels := make([]containers.StatsChannel, 0)
+	channels := make([]containers.UsageChannel, 0)
 	for _, data := range c.collections {
 		data.ticker.Stop()
 		channels = append(channels, data.ch)
@@ -131,32 +131,32 @@ func New(config configuration.CollectorConfig) *Collector {
 	}
 }
 
-type HostCollector struct {
+type MachineCollector struct {
 	context.Context
-	feed    containers.MachineStatsFeed
+	feed    containers.MachineUsageFeed
 	Rate    time.Duration
 	active  bool
 	mutex   sync.Mutex
-	samples chan *HostSample
+	samples chan *MachineSample
 }
 
-func NewHost(ctx context.Context, feed containers.MachineStatsFeed, config configuration.CollectorConfig) *HostCollector {
-	return &HostCollector{
+func NewMachine(ctx context.Context, feed containers.MachineUsageFeed, config configuration.CollectorConfig) *MachineCollector {
+	return &MachineCollector{
 		Context: ctx,
 		Rate:    time.Duration(config.Rate) * time.Millisecond,
 		feed:    feed,
 		active:  false,
-		samples: make(chan *HostSample, CHANNEL_BUFFER_SIZE),
+		samples: make(chan *MachineSample, CHANNEL_BUFFER_SIZE),
 	}
 }
 
-func (c *HostCollector) Active() bool {
+func (c *MachineCollector) Active() bool {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	return c.active
 }
 
-func (c *HostCollector) Start() error {
+func (c *MachineCollector) Start() error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -170,11 +170,11 @@ func (c *HostCollector) Start() error {
 	return nil
 }
 
-func (c *HostCollector) GetChannel() <-chan *HostSample {
+func (c *MachineCollector) GetChannel() <-chan *MachineSample {
 	return c.samples
 }
 
-func (c *HostCollector) Stop() error {
+func (c *MachineCollector) Stop() error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -183,7 +183,7 @@ func (c *HostCollector) Stop() error {
 	return nil
 }
 
-func (c *HostCollector) doCollect() {
+func (c *MachineCollector) doCollect() {
 	t := time.NewTicker(c.Rate)
 	for _ = range t.C {
 		if !c.Active() {
@@ -191,15 +191,15 @@ func (c *HostCollector) doCollect() {
 			return
 		}
 
-		metrics := c.feed.Next()
-		if metrics == nil {
+		usage := c.feed.Next()
+		if usage == nil {
 			context.GetLogger(c).Error("couldn't sample machine stats")
 			continue
 		}
 
-		sample := &HostSample{
+		sample := &MachineSample{
 			Machine:   c.feed.Machine(),
-			Stats:     metrics,
+			Usage:     usage,
 			FrameSize: c.Rate,
 			Timestamp: time.Now().Unix(),
 		}
