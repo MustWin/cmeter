@@ -113,18 +113,13 @@ func convertContainerInfoToMachineStats(stats *v1.ContainerStats) *containers.Ma
 }
 
 func convertContainerInfoToStats(stats *v1.ContainerStats) *containers.Stats {
-	numCores := uint64(len(stats.Cpu.Usage.PerCpu))
 	cpu := &containers.CpuStats{
-		TotalUsagePerc:   calculateCpuUsage(stats.Cpu.Usage.Total, numCores),
-		PerCoreUsagePerc: make([]float64, 0),
-	}
-
-	for _, nanoCpuTime := range stats.Cpu.Usage.PerCpu {
-		cpu.PerCoreUsagePerc = append(cpu.PerCoreUsagePerc, calculateCpuUsage(nanoCpuTime, numCores))
+		TotalUsage:   stats.Cpu.Usage.Total,
+		PerCoreUsage: stats.Cpu.Usage.PerCpu[:],
 	}
 
 	disk := &containers.DiskStats{
-		PerDiskIoBytes: make([]uint64, 0),
+		PerDiskIo: make([]uint64, 0),
 	}
 
 	for _, d := range stats.DiskIo.IoServiceBytes {
@@ -133,7 +128,7 @@ func convertContainerInfoToStats(stats *v1.ContainerStats) *containers.Stats {
 			total += bytesTransferred
 		}
 
-		disk.PerDiskIoBytes = append(disk.PerDiskIoBytes, total)
+		disk.PerDiskIo = append(disk.PerDiskIo, total)
 	}
 
 	net := &containers.NetworkStats{
@@ -152,7 +147,7 @@ func convertContainerInfoToStats(stats *v1.ContainerStats) *containers.Stats {
 
 	return &containers.Stats{
 		Cpu:     cpu,
-		Memory:  &containers.MemoryStats{UsageBytes: stats.Memory.Usage},
+		Memory:  &containers.MemoryStats{Usage: stats.Memory.Usage},
 		Disk:    disk,
 		Network: net,
 	}

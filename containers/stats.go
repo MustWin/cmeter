@@ -1,7 +1,8 @@
 package containers
 
 type MemoryStats struct {
-	UsageBytes uint64 `json:"usage"`
+	// bytes used
+	Usage uint64 `json:"usage"`
 }
 
 type InterfaceStats struct {
@@ -11,18 +12,27 @@ type InterfaceStats struct {
 }
 
 type NetworkStats struct {
-	TotalRxBytes uint64            `json:"total_rx_bytes"`
-	TotalTxBytes uint64            `json:"total_tx_bytes"`
-	Interfaces   []*InterfaceStats `json:"interfaces"`
+	// total bytes received
+	TotalRxBytes uint64 `json:"total_rx_bytes"`
+
+	// total bytes sent
+	TotalTxBytes uint64 `json:"total_tx_bytes"`
+
+	// per interface stats
+	Interfaces []*InterfaceStats `json:"interfaces"`
 }
 
 type CpuStats struct {
-	TotalUsagePerc   float64   `json:"total_usage"`
-	PerCoreUsagePerc []float64 `json:"per_core_usage,omitempty"`
+	// total CPU usage in nanoseconds
+	TotalUsage uint64 `json:"total_usage"`
+
+	// per core usage in nanoseconds
+	PerCoreUsage []uint64 `json:"per_core_usage,omitempty"`
 }
 
 type DiskStats struct {
-	PerDiskIoBytes []uint64 `json:"per_disk_io_bytes,omitempty"`
+	// per disk IO in bytes
+	PerDiskIo []uint64 `json:"per_disk_io_bytes,omitempty"`
 }
 
 type Stats struct {

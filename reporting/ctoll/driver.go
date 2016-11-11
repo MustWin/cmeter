@@ -65,9 +65,9 @@ func sumOf(values ...uint64) uint64 {
 
 func calculateUsage(stats *containers.Stats) *v1.Usage {
 	return &v1.Usage{
-		TotalCPUPerc:   stats.Cpu.TotalUsagePerc,
-		MemoryBytes:    stats.Memory.UsageBytes,
-		DiskIOBytes:    sumOf(stats.Disk.PerDiskIoBytes...),
+		TotalCPUPerc:   float64(stats.Cpu.TotalUsage),
+		MemoryBytes:    stats.Memory.Usage,
+		DiskIOBytes:    sumOf(stats.Disk.PerDiskIo...),
 		NetworkRxBytes: stats.Network.TotalRxBytes,
 		NetworkTxBytes: stats.Network.TotalTxBytes,
 	}
