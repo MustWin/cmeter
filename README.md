@@ -45,7 +45,7 @@ A development configuration file is included: `/config.dev.yml` and a `/config.l
 
 ```yaml
 # configuration schema version number, only `0.1`
-version: 0.1
+version: 1.0
 
 # log stuff
 log:

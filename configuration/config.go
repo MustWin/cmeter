@@ -138,7 +138,7 @@ type Config struct {
 	Tracking   TrackerConfig   `yaml:"tracking"`
 }
 
-type v0_1Config Config
+type v1_0Config Config
 
 func newConfig() *Config {
 	config := &Config{
@@ -172,18 +172,18 @@ func Parse(rd io.Reader) (*Config, error) {
 
 	p := NewParser("cmeter", []VersionedParseInfo{
 		{
-			Version: MajorMinorVersion(0, 1),
-			ParseAs: reflect.TypeOf(v0_1Config{}),
+			Version: MajorMinorVersion(1, 0),
+			ParseAs: reflect.TypeOf(v1_0Config{}),
 			ConversionFunc: func(c interface{}) (interface{}, error) {
-				if v0_1, ok := c.(*v0_1Config); ok {
-					if v0_1.Containers.Type() == "" {
+				if v1_0, ok := c.(*v1_0Config); ok {
+					if v1_0.Containers.Type() == "" {
 						return nil, fmt.Errorf("no containers configuration provided")
 					}
 
-					return (*Config)(v0_1), nil
+					return (*Config)(v1_0), nil
 				}
 
-				return nil, fmt.Errorf("Expected *v0_1Config, received %#v", c)
+				return nil, fmt.Errorf("Expected *v1_0Config, received %#v", c)
 			},
 		},
 	})
