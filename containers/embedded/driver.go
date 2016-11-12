@@ -34,6 +34,8 @@ const (
 	allowDynamicHousekeeping    = true
 
 	sharesPerCPU = 1024.0
+
+	rootContainerName = "/"
 )
 
 func init() {
@@ -287,7 +289,7 @@ func (d *driver) CloseAllChannels(ctx context.Context) error {
 }
 
 func (d *driver) GetMachineUsage(ctx context.Context) (containers.MachineUsageFeed, error) {
-	root, err := d.GetContainer(ctx, "/")
+	root, err := d.GetContainer(ctx, rootContainerName)
 	if err != nil {
 		return nil, err
 	}
