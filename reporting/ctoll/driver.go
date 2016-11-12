@@ -104,6 +104,7 @@ func (d *Driver) sendMeterStart(me *v1.MeterEvent, ch *containers.StateChange) (
 
 	e := v1.StartMeterEvent{
 		MeterEvent: me,
+		Container:  convertContainerInfo(ch.Container),
 		Allocated: &v1.BlockAlloc{
 			CPUShares:   ch.Container.Reserved.Cpu,
 			MemoryBytes: ch.Container.Reserved.Memory,
@@ -116,20 +117,20 @@ func (d *Driver) sendMeterStart(me *v1.MeterEvent, ch *containers.StateChange) (
 
 func (d *Driver) sendMeterStop(me *v1.MeterEvent, ch *containers.StateChange) ([]byte, error) {
 	me.Type = v1.MeterEventTypeStop
-	me.Container = convertContainerInfo(ch.Container)
 
 	e := v1.StopMeterEvent{MeterEvent: me}
+	e.Container = convertContainerInfo(ch.Container)
 	key := d.apiKeyFromLabel(ch.Container.Labels)
 	return []byte{}, d.client.MeterEvents().SendStopMeter(key, e)
 }
 
 func (d *Driver) sendMeterSample(me *v1.MeterEvent, s *collector.Sample) ([]byte, error) {
 	me.Type = v1.MeterEventTypeSample
-	me.Container = convertContainerInfo(s.Container)
 
 	e := v1.SampleMeterEvent{
 		MeterEvent: me,
 		Usage:      calculateUsage(s.Usage),
+		Container:  convertContainerInfo(s.Container),
 	}
 
 	key := d.apiKeyFromLabel(s.Container.Labels)
@@ -145,7 +146,6 @@ func (d *Driver) sendEvent(e *reporting.Event) ([]byte, error) {
 	switch e.Type {
 	case reporting.EventStateChange:
 		ch := e.Data.(*containers.StateChange)
-		me.Container = convertContainerInfo(ch.Container)
 		if ch.State == containers.StateRunning {
 			return d.sendMeterStart(me, ch)
 		} else {
