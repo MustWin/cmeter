@@ -76,10 +76,11 @@ type Driver interface {
 }
 
 type MachineInfo struct {
-	SystemUuid      string `json:"system_uuid"`
-	Cores           int    `json:"cores"`
-	MemoryBytes     uint64 `json:"memory_byes"`
-	CpuFrequencyKhz uint64 `json:"cpu_frequency_khz"`
+	SystemUuid      string            `json:"system_uuid"`
+	Cores           int               `json:"cores"`
+	MemoryBytes     uint64            `json:"memory_byes"`
+	CpuFrequencyKhz uint64            `json:"cpu_frequency_khz"`
+	Labels          map[string]string `json:"labels"`
 }
 
 type ReservedResources struct {

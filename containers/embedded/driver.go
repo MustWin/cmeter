@@ -190,12 +190,13 @@ func normalizeMemoryLimit(limit uint64) uint64 {
 	return limit
 }
 
-func convertMachineInfo(info *v1.MachineInfo) *containers.MachineInfo {
+func convertMachineInfo(info *v1.MachineInfo, rootSpec v2.ContainerSpec) *containers.MachineInfo {
 	return &containers.MachineInfo{
 		SystemUuid:      info.SystemUUID,
 		Cores:           info.NumCores,
 		MemoryBytes:     info.MemoryCapacity,
 		CpuFrequencyKhz: info.CpuFrequency,
+		Labels:          rootSpec.Labels,
 	}
 }
 
