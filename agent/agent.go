@@ -207,6 +207,10 @@ func (agent *Agent) ProcessEvents(quitCh <-chan struct{}) {
 	for {
 		select {
 		case <-quitCh:
+			if err := agent.containers.CloseAllChannels(agent); err != nil {
+				context.GetLogger(agent).Errorf("error closing all usage channels: %v", err)
+			}
+
 			return
 		case event := <-eventChan.GetChannel():
 			var c *containers.ContainerInfo
