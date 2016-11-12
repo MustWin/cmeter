@@ -44,7 +44,7 @@ A development configuration file is included: `/config.dev.yml` and a `/config.l
 
 
 ```yaml
-# configuration schema version number, only `0.1`
+# configuration schema version number, only `1.0`
 version: 1.0
 
 # log stuff
@@ -66,9 +66,9 @@ tracking:
     # name of the container label to look for
     label: cmeter.tracking
 
-# stats collection stuff
+# usage collection stuff
 collector:
-  # The rate at which the collector polls for container stats.
+  # The rate at which the collector polls for container usage.
   rate: 1800
 
 # The reporting driver and driver parameters
@@ -87,7 +87,7 @@ reporting:
 # Similar to the reporting driver section
 containers:
   embedded:
-    # container label with the value to override the container cpu limit tracked by cmeter (in milli-cores, e.g: '0.002', '0.1', '2.0')
+    # container label with the value to override the container cpu limit tracked by cmeter (in cpu cores, e.g: '0.002', '0.1', '2.0')
     cpu_limit_label: 'cpulimit'
     # whitelist of environment variables exposed to cmeter
     envs: ['METER_TRACKING']
