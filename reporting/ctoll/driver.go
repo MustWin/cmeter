@@ -144,6 +144,19 @@ func (d *Driver) sendMeterSample(me *v1.MeterEvent, s *collector.Sample) ([]byte
 	return []byte{}, d.client.MeterEvents().SendUsageSample(key, e)
 }
 
+func (d *Driver) sendMeterMachineSample(me *v1.MeterEvent, s *collector.MachineSample) ([]byte, error) {
+	me.Type = v1.MeterEventTypeMachineSample
+
+	e := v1.MachineSampleMeterEvent{
+		MeterEvent: me,
+		Machine:    convertMachineInfo(s.Machine),
+		Usage:      calculateMachineUsage(s.Usage, s.Machine),
+	}
+
+	key := d.apiKeyFromLabel(s.Machine.Labels)
+	return []byte{}, d.client.MeterEvents().SendMachineUsageSample(key, e)
+}
+
 func (d *Driver) sendEvent(e *reporting.Event) ([]byte, error) {
 	me := &v1.MeterEvent{
 		MeterID:   e.MeterID,
@@ -161,6 +174,9 @@ func (d *Driver) sendEvent(e *reporting.Event) ([]byte, error) {
 
 	case reporting.EventSample:
 		return d.sendMeterSample(me, e.Data.(*collector.Sample))
+
+	case reporting.EventMachineSample:
+		return d.sendMeterMachineSample(me, e.Data.(*collector.MachineSample))
 	}
 
 	return []byte{}, fmt.Errorf("unsupported event type %q", e.Type)
