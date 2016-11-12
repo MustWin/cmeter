@@ -22,6 +22,7 @@ const (
 type State string
 
 const (
+	StateNone    State = ""
 	StateRunning State = "running"
 	StateStopped State = "stopped"
 	StateUnknown State = "unknown"
