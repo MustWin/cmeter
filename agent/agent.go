@@ -2,7 +2,10 @@ package agent
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -30,6 +33,8 @@ type Agent struct {
 	registry *containers.Registry
 
 	reporting reporting.Driver
+
+	quitChs []chan struct{}
 }
 
 func (agent *Agent) Run() error {
@@ -40,13 +45,45 @@ func (agent *Agent) Run() error {
 		return fmt.Errorf("error initializing container states: %v", err)
 	}
 
+	agent.bootstrapSignalHandler()
+
 	var wg sync.WaitGroup
 	wg.Add(3)
-	go agent.ProcessSamples(wg)
-	go agent.ProcessHostSamples(wg)
-	go agent.ProcessEvents(wg)
+	go agent.ProcessSamples(wg, agent.makeQuitter())
+	go agent.ProcessHostSamples(wg, agent.makeQuitter())
+	go agent.ProcessEvents(wg, agent.makeQuitter())
 	wg.Wait()
 	return nil
+}
+
+func (agent *Agent) Shutdown() error {
+	v := struct{}{}
+	for _, ch := range agent.quitChs {
+		ch <- v
+	}
+
+	return nil
+}
+
+func (agent *Agent) makeQuitter() chan struct{} {
+	ch := make(chan struct{})
+	agent.quitChs = append(agent.quitChs, ch)
+	return ch
+}
+
+func (agent *Agent) bootstrapSignalHandler() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
+
+	go func() {
+		sig := <-c
+		context.GetLogger(agent).Infof("detected signal %v: shutting down", sig)
+		if err := agent.Shutdown(); err != nil {
+			context.GetLogger(agent).Errorf("failed to shutdown agent %v", err)
+		}
+
+		os.Exit(0)
+	}()
 }
 
 func (agent *Agent) InitializeContainers() error {
@@ -79,7 +116,7 @@ func (agent *Agent) InitializeContainers() error {
 }
 
 // TODO: break-out
-func (agent *Agent) ProcessHostSamples(wg sync.WaitGroup) {
+func (agent *Agent) ProcessHostSamples(wg sync.WaitGroup, quitCh <-chan struct{}) {
 	defer wg.Done()
 
 	context.GetLogger(agent).Info("machine usage processor started")
@@ -90,16 +127,22 @@ func (agent *Agent) ProcessHostSamples(wg sync.WaitGroup) {
 		return
 	}
 
-	for sample := range agent.machineCollector.GetChannel() {
-		e := reporting.Generate(agent, reporting.EventMachineSample, sample)
-		go func() {
-			_, err := agent.reporting.Report(agent, e)
-			if err != nil {
-				context.GetLogger(agent).Errorf("error reporting machine usage: %v", err)
-			} else {
-				context.GetLogger(agent).Debug("machine usage reported")
-			}
-		}()
+	for {
+		select {
+		case <-quitCh:
+			return
+		case sample := <-agent.machineCollector.GetChannel():
+			e := reporting.Generate(agent, reporting.EventMachineSample, sample)
+			go func() {
+				_, err := agent.reporting.Report(agent, e)
+				if err != nil {
+					context.GetLogger(agent).Errorf("error reporting machine usage: %v", err)
+				} else {
+					context.GetLogger(agent).Debug("machine usage reported")
+				}
+			}()
+
+		}
 	}
 }
 
@@ -148,7 +191,7 @@ func (agent *Agent) ProcessStateChange(c *containers.StateChange, registered boo
 }
 
 // TODO: break-out
-func (agent *Agent) ProcessEvents(wg sync.WaitGroup) {
+func (agent *Agent) ProcessEvents(wg sync.WaitGroup, quitCh <-chan struct{}) {
 	defer wg.Done()
 
 	eventTypes := []containers.EventType{
@@ -167,55 +210,65 @@ func (agent *Agent) ProcessEvents(wg sync.WaitGroup) {
 	context.GetLogger(agent).Info("event monitor started")
 	defer context.GetLogger(agent).Info("event monitor stopped")
 
-	for event := range eventChan.GetChannel() {
-		var c *containers.ContainerInfo
-		registered := false
-		state := containers.StateFromEvent(event.Type)
+	for {
+		select {
+		case <-quitCh:
+			return
+		case event := <-eventChan.GetChannel():
+			var c *containers.ContainerInfo
+			registered := false
+			state := containers.StateFromEvent(event.Type)
 
-		if cc, found := agent.registry.Get(event.Container.Name); found {
-			c = cc
-			registered = true
-		} else if state != containers.StateStopped {
-			c, err = agent.containers.GetContainer(agent, event.Container.Name)
-			if err != nil {
-				if err == containers.ErrContainerNotFound {
-					context.GetLogger(agent).Warnf("info for container %q not available", event.Container.Name)
-				} else {
-					context.GetLogger(agent).Errorf("error getting event container info: %v", err)
+			if cc, found := agent.registry.Get(event.Container.Name); found {
+				c = cc
+				registered = true
+			} else if state != containers.StateStopped {
+				c, err = agent.containers.GetContainer(agent, event.Container.Name)
+				if err != nil {
+					if err == containers.ErrContainerNotFound {
+						context.GetLogger(agent).Warnf("info for container %q not available", event.Container.Name)
+					} else {
+						context.GetLogger(agent).Errorf("error getting event container info: %v", err)
+					}
+
+					continue
 				}
-
+			} else {
 				continue
 			}
-		} else {
-			continue
-		}
 
-		change := &containers.StateChange{
-			Container: c,
-			State:     state,
-			Source:    event,
-		}
+			change := &containers.StateChange{
+				Container: c,
+				State:     state,
+				Source:    event,
+			}
 
-		go agent.ProcessStateChange(change, registered)
+			go agent.ProcessStateChange(change, registered)
+		}
 	}
 }
 
 // TODO: break-out
-func (agent *Agent) ProcessSamples(wg sync.WaitGroup) {
+func (agent *Agent) ProcessSamples(wg sync.WaitGroup, quitCh <-chan struct{}) {
 	defer wg.Done()
 
 	context.GetLogger(agent).Info("sample collector started")
 	defer context.GetLogger(agent).Info("sample collector stopped")
-	for sample := range agent.collector.GetChannel() {
-		e := reporting.Generate(agent, reporting.EventSample, sample)
-		go func() {
-			_, err := agent.reporting.Report(agent, e)
-			if err != nil {
-				context.GetLogger(agent).Errorf("error reporting usage: %v", err)
-			} else {
-				context.GetLogger(agent).Debug("usage reported")
-			}
-		}()
+	for {
+		select {
+		case <-quitCh:
+			return
+		case sample := <-agent.collector.GetChannel():
+			e := reporting.Generate(agent, reporting.EventSample, sample)
+			go func() {
+				_, err := agent.reporting.Report(agent, e)
+				if err != nil {
+					context.GetLogger(agent).Errorf("error reporting usage: %v", err)
+				} else {
+					context.GetLogger(agent).Debug("usage reported")
+				}
+			}()
+		}
 	}
 }
 
