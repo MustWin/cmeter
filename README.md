@@ -57,12 +57,14 @@ log:
   fields:
     customfield1: 'value'
 
-# container tracking stuff
+# tracking stuff
 tracking:
-  # the label used to determine if a container should be tracked and metered
-  label: cmeter_track
-  # the env key looked for on containers to determine if it should be tracked and metered
-  env: METER_TRACKING
+  # how to identify containers to track
+  marker:
+    # name of the an environment variable to look for
+    env: CMETER_TRACKING
+    # name of the container label to look for
+    label: cmeter.tracking
 
 # stats collection stuff
 collector:

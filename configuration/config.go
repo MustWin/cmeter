@@ -125,9 +125,13 @@ type CollectorConfig struct {
 	Rate int64 `yaml:"rate"`
 }
 
+type Marker struct {
+	Env   string `yaml:"env,omitempty"`
+	Label string `yaml:"label,omitempty"`
+}
+
 type TrackerConfig struct {
-	TrackingLabel string `yaml:"label,omitempty"`
-	EnvKey        string `yaml:"env,omitempty"`
+	Marker Marker `yaml:"marker,omitempty"`
 }
 
 type Config struct {
@@ -153,7 +157,10 @@ func newConfig() *Config {
 		Reporting: make(Driver),
 
 		Tracking: TrackerConfig{
-			TrackingLabel: "com.cmeter.track",
+			Marker: Marker{
+				Env:   "CMETER_TRACKING",
+				Label: "cmeter.tracking",
+			},
 		},
 
 		Collector: CollectorConfig{

@@ -6,9 +6,10 @@ log:
 #  fields:
 #    customfield1: 'value'
 
-
 tracking:
-  label: 'com.example.track'
+  marker:
+    env: CMETER_TRACKING
+    label: cmeter.tracking
 
 collector:
   rate: 5000

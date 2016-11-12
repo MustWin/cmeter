@@ -251,9 +251,9 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 	log.Infof("using %q logging formatter", config.Log.Formatter)
 	log.Infof("using %q containers driver", config.Containers.Type())
 	log.Infof("using %q reporting driver", config.Reporting.Type())
-	log.Infof("using %q tracking label", config.Tracking.TrackingLabel)
-	if config.Tracking.EnvKey != "" {
-		log.Infof("using %q tracking environment key", config.Tracking.EnvKey)
+	log.Infof("monitoring containers with a %q label", config.Tracking.Marker.Label)
+	if config.Tracking.Marker.Env != "" {
+		log.Infof("monitoring containers with a %q env variable", config.Tracking.Marker.Env)
 	}
 
 	return &Agent{
@@ -263,7 +263,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 		collector:  collector.New(config.Collector),
 		//machineCollector: collector.NewMachineCollector(config.Collector),
 		reporting: reportingDriver,
-		registry:  containers.NewRegistry(config.Tracking.TrackingLabel, config.Tracking.EnvKey),
+		registry:  containers.NewRegistry(config.Tracking.Marker),
 	}, nil
 }
 
