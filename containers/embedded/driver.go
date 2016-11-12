@@ -76,14 +76,24 @@ func (factory *driverFactory) Create(parameters map[string]interface{}) (contain
 
 	cpuLimitLabel, _ := parameters["cpu_limit_label"].(string)
 
-	d := &driver{
-		cpuLimitLabel: cpuLimitLabel,
-		machine:       convertMachineInfo(machine),
-		manager:       m,
-	}
-
 	if err = m.Start(); err != nil {
 		return nil, err
+	}
+
+	rootMap, err := m.GetContainerSpec(rootContainerName, v2.RequestOptions{
+		IdType:    v2.TypeName,
+		Count:     0,
+		Recursive: false,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	d := &driver{
+		cpuLimitLabel: cpuLimitLabel,
+		machine:       convertMachineInfo(machine, rootMap[rootContainerName]),
+		manager:       m,
 	}
 
 	return d, nil
