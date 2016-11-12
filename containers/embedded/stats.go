@@ -66,12 +66,23 @@ type machineUsageFeed struct {
 	machine *containers.MachineInfo
 	root    *containers.ContainerInfo
 	manager manager.Manager
+	last    *v1.ContainerStats
 }
 
 func (ch *machineUsageFeed) Next() *containers.MachineUsage {
 	ci, err := ch.manager.GetContainerInfo(ch.root.Name, &v1.ContainerInfoRequest{NumStats: 1})
 	if err == nil && ci != nil && len(ci.Stats) > 0 {
-		return convertContainerInfoToMachineUsage(ci.Stats[0])
+		stats := ci.Stats[0]
+
+		totalCpuNs := stats.Cpu.Usage.Total
+		deltaCpuNs := totalCpuNs
+		if ch.last != nil {
+			deltaCpuNs = totalCpuNs - ch.last.Cpu.Usage.Total
+		}
+
+		ms := getMachineUsage(deltaCpuNs, stats.Memory.Usage)
+		ch.last = stats
+		return ms
 	}
 
 	return nil
@@ -82,11 +93,15 @@ func (ch *machineUsageFeed) Machine() *containers.MachineInfo {
 }
 
 func newMachineUsageFeed(manager manager.Manager, machine *containers.MachineInfo, root *containers.ContainerInfo) *machineUsageFeed {
-	return &machineUsageFeed{
+	f := &machineUsageFeed{
 		manager: manager,
 		root:    root,
 		machine: machine,
 	}
+
+	// prime it
+	f.Next()
+	return f
 }
 
 func newUsageChannel(manager manager.Manager, container *containers.ContainerInfo) *usageChannel {
@@ -104,11 +119,15 @@ func calculateCpuUsage(nanoCpuTime uint64, numCores uint64) float64 {
 	return float64(nanoCpuTime) / float64(numCores*1e+9)
 }
 
-func convertContainerInfoToMachineUsage(stats *v1.ContainerStats) *containers.MachineUsage {
-	cs := convertContainerInfoToStats(stats)
+func getMachineUsage(cpuNs, memoryBytes uint64) *containers.MachineUsage {
 	return &containers.MachineUsage{
-		Cpu:    cs.Cpu,
-		Memory: cs.Memory,
+		Cpu: &containers.CpuUsage{
+			PerCore: nil,
+			Total:   cpuNs,
+		},
+		Memory: &containers.MemoryUsage{
+			Bytes: memoryBytes,
+		},
 	}
 }
 

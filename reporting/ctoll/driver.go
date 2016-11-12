@@ -73,6 +73,13 @@ func calculateUsage(usage *containers.Usage) *v1.Usage {
 	}
 }
 
+func calculateMachineUsage(u *containers.MachineUsage, m *containers.MachineInfo) *v1.MachineUsage {
+	return &v1.MachineUsage{
+		CPUShares:   float64(uint64(m.Cores) * u.Cpu.Total),
+		MemoryBytes: u.Memory.Bytes,
+	}
+}
+
 type Driver struct {
 	keyLabel string
 	client   *ctollclient.Client
