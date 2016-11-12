@@ -16,6 +16,7 @@ const (
 	EventContainerOom      EventType = "oom"
 	EventContainerOomKill  EventType = "oomKill"
 	EventContainerExisted  EventType = "containerExisted"
+	EventMeterShutdown     EventType = "meterShutdown"
 )
 
 type State string

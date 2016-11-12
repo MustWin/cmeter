@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/MustWin/cmeter/context"
 	"github.com/MustWin/cmeter/reporting"
 	reportingFactory "github.com/MustWin/cmeter/reporting/factory"
+	"github.com/MustWin/cmeter/shared/disposer"
 )
 
 type Agent struct {
@@ -34,7 +34,7 @@ type Agent struct {
 
 	reporting reporting.Driver
 
-	quitChs []chan struct{}
+	dispose *disposer.Disposer
 }
 
 func (agent *Agent) Run() error {
@@ -47,28 +47,30 @@ func (agent *Agent) Run() error {
 
 	agent.bootstrapSignalHandler()
 
-	var wg sync.WaitGroup
-	wg.Add(3)
-	go agent.ProcessSamples(wg, agent.makeQuitter())
-	go agent.ProcessHostSamples(wg, agent.makeQuitter())
-	go agent.ProcessEvents(wg, agent.makeQuitter())
-	wg.Wait()
+	go agent.ProcessSamples(agent.dispose.Quitter())
+	go agent.ProcessHostSamples(agent.dispose.Quitter())
+	go agent.ProcessEvents(agent.dispose.Quitter())
+
+	agent.dispose.Wait()
+	agent.Shutdown()
 	return nil
 }
 
 func (agent *Agent) Shutdown() error {
-	v := struct{}{}
-	for _, ch := range agent.quitChs {
-		ch <- v
+	for _, c := range agent.registry.List() {
+		agent.ProcessStateChange(&containers.StateChange{
+			Container: c,
+			Source: &containers.Event{
+				Container: c,
+				Timestamp: time.Now().Unix(),
+				Type:      containers.EventMeterShutdown,
+			},
+			State: containers.StateStopped,
+		}, true)
 	}
 
+	agent.dispose.QuitAll()
 	return nil
-}
-
-func (agent *Agent) makeQuitter() chan struct{} {
-	ch := make(chan struct{})
-	agent.quitChs = append(agent.quitChs, ch)
-	return ch
 }
 
 func (agent *Agent) bootstrapSignalHandler() {
@@ -78,11 +80,7 @@ func (agent *Agent) bootstrapSignalHandler() {
 	go func() {
 		sig := <-c
 		context.GetLogger(agent).Infof("detected signal %v: shutting down", sig)
-		if err := agent.Shutdown(); err != nil {
-			context.GetLogger(agent).Errorf("failed to shutdown agent %v", err)
-		}
-
-		os.Exit(0)
+		agent.dispose.Dispose()
 	}()
 }
 
@@ -116,9 +114,7 @@ func (agent *Agent) InitializeContainers() error {
 }
 
 // TODO: break-out
-func (agent *Agent) ProcessHostSamples(wg sync.WaitGroup, quitCh <-chan struct{}) {
-	defer wg.Done()
-
+func (agent *Agent) ProcessHostSamples(quitCh <-chan struct{}) {
 	context.GetLogger(agent).Info("machine usage processor started")
 	defer context.GetLogger(agent).Info("machine usage processor stopped")
 
@@ -191,9 +187,7 @@ func (agent *Agent) ProcessStateChange(c *containers.StateChange, registered boo
 }
 
 // TODO: break-out
-func (agent *Agent) ProcessEvents(wg sync.WaitGroup, quitCh <-chan struct{}) {
-	defer wg.Done()
-
+func (agent *Agent) ProcessEvents(quitCh <-chan struct{}) {
 	eventTypes := []containers.EventType{
 		containers.EventContainerCreation,
 		containers.EventContainerDeletion,
@@ -249,9 +243,7 @@ func (agent *Agent) ProcessEvents(wg sync.WaitGroup, quitCh <-chan struct{}) {
 }
 
 // TODO: break-out
-func (agent *Agent) ProcessSamples(wg sync.WaitGroup, quitCh <-chan struct{}) {
-	defer wg.Done()
-
+func (agent *Agent) ProcessSamples(quitCh <-chan struct{}) {
 	context.GetLogger(agent).Info("sample collector started")
 	defer context.GetLogger(agent).Info("sample collector stopped")
 	for {
@@ -312,6 +304,7 @@ func New(ctx context.Context, config *configuration.Config) (*Agent, error) {
 	return &Agent{
 		Context:    ctx,
 		config:     config,
+		dispose:    disposer.New(),
 		containers: containersDriver,
 		collector:  collector.New(config.Collector),
 		//machineCollector: collector.NewMachineCollector(config.Collector),

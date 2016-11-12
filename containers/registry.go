@@ -33,6 +33,17 @@ func (registry *Registry) Get(containerName string) (*ContainerInfo, bool) {
 	return info, ok
 }
 
+func (registry *Registry) List() []*ContainerInfo {
+	results := make([]*ContainerInfo, len(registry.containers))
+	i := 0
+	for _, c := range registry.containers {
+		results[i] = c
+		i++
+	}
+
+	return results
+}
+
 func (registry *Registry) IsRegistered(containerName string) bool {
 	registry.mutex.Lock()
 	defer registry.mutex.Unlock()
