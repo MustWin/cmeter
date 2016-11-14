@@ -3,7 +3,6 @@ package ctoll
 import (
 	"fmt"
 	"net/http"
-	//"time"
 
 	ctollclient "github.com/MustWin/ctoll/ctoll/api/client"
 	"github.com/MustWin/ctoll/ctoll/api/v1"
