@@ -17,6 +17,7 @@ type usageChannel struct {
 	ch         chan *containers.Usage
 	doneCh     chan bool
 	closed     bool
+	last       *v1.ContainerStats
 }
 
 func (ch *usageChannel) Container() *containers.ContainerInfo {
@@ -43,7 +44,14 @@ func (ch *usageChannel) startChannel() {
 		default:
 			ci, err := ch.manager.GetContainerInfo(ch.container.Name, &v1.ContainerInfoRequest{NumStats: 1})
 			if err == nil && ci != nil && len(ci.Stats) > 0 {
-				ch.ch <- convertContainerInfoToStats(ci.Stats[0])
+				stats := ci.Stats[0]
+				if ch.last == nil {
+					ch.last = stats
+				}
+
+				cs := convertContainerInfoToStats(ch.last, stats)
+				ch.last = stats
+				ch.ch <- cs
 			}
 		}
 	}
@@ -73,14 +81,11 @@ func (ch *machineUsageFeed) Next() *containers.MachineUsage {
 	ci, err := ch.manager.GetContainerInfo(ch.root.Name, &v1.ContainerInfoRequest{NumStats: 1})
 	if err == nil && ci != nil && len(ci.Stats) > 0 {
 		stats := ci.Stats[0]
-
-		totalCpuNs := stats.Cpu.Usage.Total
-		deltaCpuNs := totalCpuNs
-		if ch.last != nil {
-			deltaCpuNs = totalCpuNs - ch.last.Cpu.Usage.Total
+		if ch.last == nil {
+			ch.last = stats
 		}
 
-		ms := getMachineUsage(deltaCpuNs, stats.Memory.Usage)
+		ms := getMachineUsage(ch.last, stats)
 		ch.last = stats
 		return ms
 	}
@@ -105,36 +110,35 @@ func newMachineUsageFeed(manager manager.Manager, machine *containers.MachineInf
 }
 
 func newUsageChannel(manager manager.Manager, container *containers.ContainerInfo) *usageChannel {
-	return &usageChannel{
+	ch := &usageChannel{
 		manager:   manager,
 		container: container,
 		closed:    false,
 		ch:        make(chan *containers.Usage),
 		doneCh:    make(chan bool),
 	}
+
+	// prime it
+	<-ch.GetChannel()
+	return ch
 }
 
-func calculateCpuUsage(nanoCpuTime uint64, numCores uint64) float64 {
-	// https://github.com/kubernetes/heapster/issues/650
-	return float64(nanoCpuTime) / float64(numCores*1e+9)
-}
-
-func getMachineUsage(cpuNs, memoryBytes uint64) *containers.MachineUsage {
+func getMachineUsage(last, stats *v1.ContainerStats) *containers.MachineUsage {
+	cu := convertContainerInfoToStats(last, stats)
 	return &containers.MachineUsage{
-		Cpu: &containers.CpuUsage{
-			PerCore: nil,
-			Total:   cpuNs,
-		},
-		Memory: &containers.MemoryUsage{
-			Bytes: memoryBytes,
-		},
+		Cpu:    cu.Cpu,
+		Memory: cu.Memory,
 	}
 }
 
-func convertContainerInfoToStats(stats *v1.ContainerStats) *containers.Usage {
+func convertContainerInfoToStats(last, stats *v1.ContainerStats) *containers.Usage {
 	cpu := &containers.CpuUsage{
-		Total:   stats.Cpu.Usage.Total,
-		PerCore: stats.Cpu.Usage.PerCpu[:],
+		Total:   int64(stats.Cpu.Usage.Total - last.Cpu.Usage.Total),
+		PerCore: make([]int64, len(stats.Cpu.Usage.PerCpu)),
+	}
+
+	for i, coreNs := range stats.Cpu.Usage.PerCpu {
+		cpu.PerCore[i] = int64(coreNs - last.Cpu.Usage.PerCpu[i])
 	}
 
 	disk := &containers.DiskUsage{

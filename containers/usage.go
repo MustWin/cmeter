@@ -24,10 +24,10 @@ type NetworkUsage struct {
 
 type CpuUsage struct {
 	// total CPU usage in nanoseconds
-	Total uint64 `json:"total"`
+	Total int64 `json:"total"`
 
 	// per core usage in nanoseconds
-	PerCore []uint64 `json:"per_core,omitempty"`
+	PerCore []int64 `json:"per_core,omitempty"`
 }
 
 type DiskUsage struct {
