@@ -17,6 +17,7 @@ const (
 	RouteNameBillingModel    = "billingmodel"
 	RouteNameDistribution    = "distribution"
 	RouteNameCostSavings     = "costsavings"
+	RouteNameResources       = "resources"
 )
 
 func Router() *mux.Router {

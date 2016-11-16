@@ -200,6 +200,12 @@ var (
 	{ "id": ..., "name": ... }
 	, ...
 ]`
+
+	clusterResourceBody = `{
+	"node_count": number of nodes in cluster,
+	"memory_bytes": memory capacity of cluster,
+	"cpu_shares": cpus capacity of cluster,
+}`
 )
 
 var APIDescriptor = struct {
@@ -335,6 +341,41 @@ var routeDescriptors = []describe.RouteDescriptor{
 
 								Body: describe.BodyDescriptor{
 									ContentType: "application/json; charset=utf-8",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		Name:        RouteNameResources,
+		Path:        "/v1/resources",
+		Entity:      "ClusterCapacity",
+		Description: "API route to view cluster resource information.",
+		Methods: []describe.MethodDescriptor{
+			{
+				Method:      "GET",
+				Description: "Get cluster resource information.",
+				Requests: []describe.RequestDescriptor{
+					{
+						Headers: []describe.ParameterDescriptor{
+							hostHeader,
+						},
+
+						Successes: []describe.ResponseDescriptor{
+							{
+								Description: "Cluster resource information returned",
+								StatusCode:  http.StatusOK,
+								Headers: []describe.ParameterDescriptor{
+									versionHeader,
+									jsonContentLengthHeader,
+								},
+
+								Body: describe.BodyDescriptor{
+									ContentType: "application/json; charset=utf-8",
+									Format:      clusterResourceBody,
 								},
 							},
 						},

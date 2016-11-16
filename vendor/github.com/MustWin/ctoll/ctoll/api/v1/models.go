@@ -21,28 +21,49 @@ type APIKey struct {
 }
 
 type MachineInfo struct {
-	SystemUuid      string `json:"system_uuid"`
-	Cores           int    `json:"cores"`
-	MemoryBytes     uint64 `json:"memory_bytes"`
-	CpuFrequencyKhz uint64 `json:"cpu_frequency_khz"`
+	SystemUuid      string            `json:"system_uuid"`
+	Cores           int               `json:"cores"`
+	MemoryBytes     uint64            `json:"memory_bytes"`
+	CpuFrequencyKhz uint64            `json:"cpu_frequency_khz"`
+	Labels          map[string]string `json:"labels"`
+	Name            string            `json:"name"`
+}
+
+type ClusterCapacity struct {
+	CPUShares   float64 `json:"cpu_shares"`
+	MemoryBytes int64   `json:"memory_bytes"`
+	NumNodes    int     `json:"node_count"`
 }
 
 type MachineUsage struct {
 	CPUShares   float64 `json:"cpu_shares"`
-	MemoryBytes uint64  `json:"memory_bytes"`
+	MemoryBytes int64   `json:"memory_bytes"`
 }
 
 type Usage struct {
-	TotalCPUPerc   float64 `json:"total_cpu_perc"`
-	MemoryBytes    uint64  `json:"memory_bytes"`
-	DiskIOBytes    uint64  `json:"disk_io_bytes"`
-	NetworkRxBytes uint64  `json:"net_rx_bytes"`
-	NetworkTxBytes uint64  `json:"net_tx_bytes"`
+	// nanoseconds of CPU time
+	CPU int64 `json:"cpu_time"`
+
+	// shares of CPU (not used by cmeter)
+	CPUShares float64 `json:"cpu_shares,omitempty"`
+
+	// memory in bytes
+	MemoryBytes int64 `json:"memory_bytes"`
+
+	// disk in bytes
+	DiskIOBytes int64 `json:"disk_io_bytes"`
+
+	// network recv in bytes
+	NetworkRxBytes int64 `json:"net_rx_bytes"`
+
+	// network sent in bytes
+	NetworkTxBytes int64 `json:"net_tx_bytes"`
 }
 
 func (u *Usage) Add(u2 *Usage) *Usage {
 	return &Usage{
-		TotalCPUPerc:   u.TotalCPUPerc + u2.TotalCPUPerc,
+		CPU:            u.CPU + u2.CPU,
+		CPUShares:      u.CPUShares + u2.CPUShares,
 		MemoryBytes:    u.MemoryBytes + u2.MemoryBytes,
 		DiskIOBytes:    u.DiskIOBytes + u2.DiskIOBytes,
 		NetworkRxBytes: u.NetworkRxBytes + u2.NetworkRxBytes,
@@ -50,9 +71,10 @@ func (u *Usage) Add(u2 *Usage) *Usage {
 	}
 }
 
-func (u *Usage) Average(n uint64) *Usage {
+func (u *Usage) Average(n int64) *Usage {
 	return &Usage{
-		TotalCPUPerc:   u.TotalCPUPerc / float64(n),
+		CPU:            u.CPU / n,
+		CPUShares:      u.CPUShares / float64(n),
 		MemoryBytes:    u.MemoryBytes / n,
 		DiskIOBytes:    u.DiskIOBytes / n,
 		NetworkRxBytes: u.NetworkRxBytes / n,
@@ -62,15 +84,15 @@ func (u *Usage) Average(n uint64) *Usage {
 
 type BlockAlloc struct {
 	CPUShares   float64 `json:"cpu_shares"`
-	MemoryBytes uint64  `json:"memory_bytes"`
+	MemoryBytes int64   `json:"memory_bytes"`
 }
 
 type ContainerInfo struct {
-	ImageName string            `json:"image_name"`
-	ImageTag  string            `json:"image_tag"`
-	Name      string            `json:"name"`
-	Labels    map[string]string `json:"labels"`
-	Machine   *MachineInfo      `json:"machine"`
+	ImageName string            `json:"image_name,omitempty"`
+	ImageTag  string            `json:"image_tag,omitempty"`
+	Name      string            `json:"name,omitempty"`
+	Labels    map[string]string `json:"labels,omitempty"`
+	Machine   *MachineInfo      `json:"machine,omitempty"`
 }
 
 type MeterEventType string

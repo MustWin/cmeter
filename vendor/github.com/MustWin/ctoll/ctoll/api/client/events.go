@@ -11,6 +11,7 @@ import (
 
 type MeterEventClient interface {
 	SendUsageSample(apiKey string, e v1.SampleMeterEvent) error
+	SendMachineUsageSample(apiKey string, e v1.MachineSampleMeterEvent) error
 	SendStartMeter(apiKey string, e v1.StartMeterEvent) error
 	SendStopMeter(apiKey string, e v1.StopMeterEvent) error
 }

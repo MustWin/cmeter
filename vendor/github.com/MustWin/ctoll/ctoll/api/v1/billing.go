@@ -77,17 +77,16 @@ type PeriodDistribution struct {
 	End                int64   `json:"end"`
 	AverageCPU         float64 `json:"average_cpu"`
 	AverageCPUAlloc    float64 `json:"average_cpu_alloc"`
-	AverageMemory      uint64  `json:"average_memory"`
-	AverageMemoryAlloc uint64  `json:"average_memory_alloc"`
-	//AverageDiskAlloc `json:"average_disk_alloc"`
-	DiskIO uint64  `json:"disk_io"`
-	NetRx  uint64  `json:"net_rx"`
-	NetTx  uint64  `json:"net_tx"`
-	Cost   float64 `json:"cost"`
+	AverageMemory      int64   `json:"average_memory"`
+	AverageMemoryAlloc int64   `json:"average_memory_alloc"`
+	DiskIO             int64   `json:"disk_io"`
+	NetRx              int64   `json:"net_rx"`
+	NetTx              int64   `json:"net_tx"`
+	Cost               float64 `json:"cost"`
 }
 
 func (d *PeriodDistribution) AddUsage(u *Usage) {
-	d.AverageCPU += u.TotalCPUPerc
+	d.AverageCPU += u.CPUShares
 	d.AverageMemory += u.MemoryBytes
 	d.DiskIO += u.DiskIOBytes
 	d.NetRx += u.NetworkRxBytes
@@ -99,17 +98,17 @@ func (d *PeriodDistribution) AddAlloc(b *BlockAlloc) {
 	d.AverageMemoryAlloc += b.MemoryBytes
 }
 
-func (d *PeriodDistribution) AverageUsageOver(n uint64) {
+func (d *PeriodDistribution) AverageUsageOver(n int64) {
 	if n == 0 {
 		return
 	}
 
 	f := float64(n)
 	d.AverageCPU = d.AverageCPU / f
-	d.AverageMemory = d.AverageMemory / n
+	d.AverageMemory = d.AverageMemory / int64(n)
 }
 
-func (d *PeriodDistribution) AverageAllocationOver(n uint64) {
+func (d *PeriodDistribution) AverageAllocationOver(n int64) {
 	if n == 0 {
 		return
 	}
