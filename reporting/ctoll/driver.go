@@ -3,7 +3,6 @@ package ctoll
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	ctollclient "github.com/MustWin/ctoll/ctoll/api/client"
 	"github.com/MustWin/ctoll/ctoll/api/v1"
@@ -42,6 +41,8 @@ func convertMachineInfo(m *containers.MachineInfo) *v1.MachineInfo {
 		Cores:           m.Cores,
 		CpuFrequencyKhz: m.CpuFrequencyKhz,
 		MemoryBytes:     m.MemoryBytes,
+		Labels:          m.Labels,
+		Name:            m.Name,
 	}
 }
 
@@ -68,7 +69,7 @@ func calculateUsage(usage *containers.Usage, cores int64) *v1.Usage {
 	fcores := float64(cores)
 	return &v1.Usage{
 		CPU:            usage.Cpu.Total,
-		CPUShares:      (float64(usage.Cpu.Total) / (fcores * float64(time.Second))) * fcores,
+		CPUShares:      (float64(usage.Cpu.Total) / (fcores * 1e+10)) * fcores,
 		MemoryBytes:    int64(usage.Memory.Bytes),
 		DiskIOBytes:    sumOf(usage.Disk.PerDiskIo...),
 		NetworkRxBytes: int64(usage.Network.TotalRxBytes),

@@ -81,6 +81,7 @@ type MachineInfo struct {
 	MemoryBytes     uint64            `json:"memory_byes"`
 	CpuFrequencyKhz uint64            `json:"cpu_frequency_khz"`
 	Labels          map[string]string `json:"labels"`
+	Name            string            `json:"name"`
 }
 
 type ReservedResources struct {
