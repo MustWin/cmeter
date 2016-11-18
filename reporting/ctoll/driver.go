@@ -3,6 +3,7 @@ package ctoll
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	ctollclient "github.com/MustWin/ctoll/ctoll/api/client"
 	"github.com/MustWin/ctoll/ctoll/api/v1"
@@ -54,22 +55,24 @@ func convertContainerInfo(ci *containers.ContainerInfo) *v1.ContainerInfo {
 	}
 }
 
-func sumOf(values ...uint64) uint64 {
-	sum := uint64(0)
+func sumOf(values ...uint64) int64 {
+	sum := int64(0)
 	for _, v := range values {
-		sum += uint64(v)
+		sum += int64(v)
 	}
 
 	return sum
 }
 
-func calculateUsage(usage *containers.Usage) *v1.Usage {
+func calculateUsage(usage *containers.Usage, cores int64) *v1.Usage {
+	fcores := float64(cores)
 	return &v1.Usage{
-		TotalCPUPerc:   float64(usage.Cpu.Total),
-		MemoryBytes:    usage.Memory.Bytes,
+		CPU:            usage.Cpu.Total,
+		CPUShares:      (float64(usage.Cpu.Total) / (fcores * float64(time.Second))) * fcores,
+		MemoryBytes:    int64(usage.Memory.Bytes),
 		DiskIOBytes:    sumOf(usage.Disk.PerDiskIo...),
-		NetworkRxBytes: usage.Network.TotalRxBytes,
-		NetworkTxBytes: usage.Network.TotalTxBytes,
+		NetworkRxBytes: int64(usage.Network.TotalRxBytes),
+		NetworkTxBytes: int64(usage.Network.TotalTxBytes),
 	}
 }
 
@@ -77,7 +80,7 @@ func calculateMachineUsage(u *containers.MachineUsage, m *containers.MachineInfo
 	cores := float64(m.Cores)
 	return &v1.MachineUsage{
 		CPUShares:   (float64(u.Cpu.Total) / (1e+10 * cores)) * cores,
-		MemoryBytes: u.Memory.Bytes,
+		MemoryBytes: int64(u.Memory.Bytes),
 	}
 }
 
@@ -115,7 +118,7 @@ func (d *Driver) sendMeterStart(me *v1.MeterEvent, ch *containers.StateChange) (
 		Container:  convertContainerInfo(ch.Container),
 		Allocated: &v1.BlockAlloc{
 			CPUShares:   ch.Container.Reserved.Cpu,
-			MemoryBytes: ch.Container.Reserved.Memory,
+			MemoryBytes: int64(ch.Container.Reserved.Memory),
 		},
 	}
 
@@ -137,7 +140,7 @@ func (d *Driver) sendMeterSample(me *v1.MeterEvent, s *collector.Sample) ([]byte
 
 	e := v1.SampleMeterEvent{
 		MeterEvent: me,
-		Usage:      calculateUsage(s.Usage),
+		Usage:      calculateUsage(s.Usage, int64(s.Container.Machine.Cores)),
 		Container:  convertContainerInfo(s.Container),
 	}
 
